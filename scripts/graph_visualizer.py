@@ -126,4 +126,3 @@ def create_interactive_graph(graph: nx.DiGraph, filename: str = "knowledge_graph
     fig.write_html(output_path)
     print(f"Interactive Plotly graph saved to: {output_path}")
     return output_path
-

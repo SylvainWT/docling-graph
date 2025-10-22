@@ -4,8 +4,14 @@ from pydantic import BaseModel, Field
 from typing import Optional, List, Any
 
 def Edge(label: str, **kwargs: Any) -> Any:
-    """Helper function to create a Pydantic Field with edge metadata."""
-    return Field(..., json_schema_extra={'edge_label': label}, **kwargs)
+    """
+    Helper function to create a Pydantic Field with edge metadata.
+    It merges the edge_label with any other json_schema_extra passed.
+    """
+    # FIX: Pop existing schema_extra and merge it, preventing the TypeError
+    schema_extra = kwargs.pop('json_schema_extra', {})
+    schema_extra['edge_label'] = label
+    return Field(..., json_schema_extra=schema_extra, **kwargs)
 
 # --- Enhanced Node Definitions ---
 
@@ -67,17 +73,25 @@ class InsurancePlan(BaseModel):
         description="The name of the insurance plan.",
         examples=["ESSENTIELLE", "CONFORT", "CONFORT PLUS"]
     )
-    included_guarantees: Optional[List[str]] = Field(
-        description="A list of the NAMES of guarantees explicitly INCLUDED in this plan, often marked with '✓'.",
-        default_factory=list
+    # --- UPDATED FIELDS ---
+    # Pass 'target_label' inside json_schema_extra so the Edge function can merge it.
+    included_guarantees: Optional[List[str]] = Edge(
+        label="INCLUDES_GUARANTEE",
+        description="A list of the NAMES of guarantees explicitly INCLUDED in this plan.",
+        default_factory=list,
+        json_schema_extra={'target_label': 'Guarantee'}
     )
-    optional_guarantees: Optional[List[str]] = Field(
-        description="A list of the NAMES of optional add-on guarantees for this plan, often marked with 'En option'.",
-        default_factory=list
+    optional_guarantees: Optional[List[str]] = Edge(
+        label="HAS_OPTION",
+        description="A list of the NAMES of optional add-on guarantees for this plan.",
+        default_factory=list,
+        json_schema_extra={'target_label': 'Guarantee'}
     )
-    excluded_guarantees: Optional[List[str]] = Field(
-        description="A list of the NAMES of guarantees NOT available for this plan, often indicated by a blank space.",
-        default_factory=list
+    excluded_guarantees: Optional[List[str]] = Edge(
+        label="EXCLUDES_GUARANTEE",
+        description="A list of the NAMES of guarantees NOT available for this plan.",
+        default_factory=list,
+        json_schema_extra={'target_label': 'Guarantee'}
     )
 
 # --- Central Node with Edges ---
