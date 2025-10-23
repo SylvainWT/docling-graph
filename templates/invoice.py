@@ -1,134 +1,247 @@
 """
-Pydantic models defining the schema for invoice data extraction.
+Pydantic templates for Invoice extraction.
 
-These models include descriptions and concrete examples in each field to guide
-the language model, improving the accuracy and consistency of the extracted data.
-The schema is designed to be converted into a knowledge graph.
+This file is self-contained and has no external template dependencies.
+It includes all necessary sub-models and provides examples for each field.
 """
+from pydantic import BaseModel, ConfigDict, Field
+from typing import List, Optional
+from datetime import date
 
-from pydantic import BaseModel, Field
-from typing import Optional, List, Any
+# --- Reusable Component: MonetaryAmount ---
+class MonetaryAmount(BaseModel):
+    """
+    A component model to represent a monetary value with its currency.
+    No graph_id_fields, as it's a value object.
+    """
+    value: float = Field(
+        ...,
+        description="The numeric value of the amount",
+        examples=[150.00, 29.99, 1234.56]
+    )
+    currency: Optional[str] = Field(
+        None,
+        description="The ISO 4217 currency code",
+        examples=["EUR", "USD", "GBP"]
+    )
 
-# A special object to define graph edges
-def Edge(label: str, **kwargs: Any) -> Any:
-    """Helper function to create a Pydantic Field with edge metadata."""
-    return Field(..., json_schema_extra={'edge_label': label}, **kwargs)
+    def __str__(self):
+        return f"{self.value} {self.currency or ''}".strip()
 
-# --- Node Definitions ---
-
+# --- Reusable Component: Address ---
 class Address(BaseModel):
-    """Represents a physical address entity."""
-    street: str = Field(
+    """
+    A flexible, generic model for a physical address.
+    It's treated as a component, so it has no graph_id_fields.
+    """
+    street_address: Optional[str] = Field(
+        None,
         description="Street name and number",
-        examples=["Marktgasse 28", "Rue du Lac 1268"]
+        examples=["55 Rue du Faubourg Saint-Honoré", "100 Main Street"]
     )
-    postal_code: str = Field(
+    city: Optional[str] = Field(
+        None,
+        description="City",
+        examples=["Paris", "New York"]
+    )
+    state_or_province: Optional[str] = Field(
+        None,
+        description="State, province, or region",
+        examples=["Île-de-France", "NY"]
+    )
+    postal_code: Optional[str] = Field(
+        None,
         description="Postal or ZIP code",
-        examples=["9400", "2501"]
-    )
-    city: str = Field(
-        description="City or town name",
-        examples=["Rorschach", "Biel"]
+        examples=["75008", "10001"]
     )
     country: Optional[str] = Field(
-        default=None,
-        description="Country, preferably as a two-letter code.",
-        examples=["CH"]
+        None,
+        description="Country",
+        examples=["France", "USA"]
     )
 
+    def __str__(self):
+        parts = [self.street_address, self.city, self.state_or_province, self.postal_code, self.country]
+        return ", ".join(p for p in parts if p)
+
+# --- Reusable Entity: Organization ---
 class Organization(BaseModel):
-    """Represents a company or organization entity."""
+    """
+    A generic model for any organization (vendor, customer, etc.).
+    Its name is its unique identifier in the graph.
+    """
+    model_config = ConfigDict(graph_id_fields=['name'])
+    
     name: str = Field(
+        ...,
         description="The legal name of the organization",
-        examples=["Robert Schneider AG"]
+        examples=["TechCorp SAS", "Global Solutions Ltd."]
     )
     phone: Optional[str] = Field(
-        default=None,
+        None,
         description="Contact phone number",
-        examples=["059/987 6540"]
+        examples=["+33 1 23 45 67 89", "+1 212 555 1234"]
     )
     email: Optional[str] = Field(
-        default=None,
+        None,
         description="Contact email address",
-        examples=["robert@rschneider.ch"]
+        examples=["contact@techcorp.fr", "billing@globalsolutions.com"]
     )
     website: Optional[str] = Field(
-        default=None,
-        description="Company website URL",
-        examples=["www.rschneider.ch"]
+        None,
+        description="Official website",
+        examples=["www.techcorp.fr", "globalsolutions.com"]
+    )
+    tax_id: Optional[str] = Field(
+        None,
+        description="Tax ID, VAT ID, or other official identifier",
+        examples=["FR123456789", "EIN 98-7654321"]
     )
     
-    # --- Edge Definition ---
-    located_at: Address = Edge(label="LOCATED_AT")
-
-class Person(BaseModel):
-    """Represents an individual person entity."""
-    name: str = Field(
-        description="Full name of the person",
-        examples=["Pia Rutschmann", "Robert Schneider"]
+    # An organization can have one or more addresses
+    addresses: List[Address] = Field(
+        default_factory=list,
+        description="List of physical addresses for the organization"
     )
     
-    # --- Edge Definition ---
-    lives_at: Address = Edge(label="LIVES_AT")
+    def __str__(self):
+        return self.name
 
+# --- Reusable Component: LineItem ---
 class LineItem(BaseModel):
-    """Represents a single line item within the invoice."""
+    """
+    A single line item on the invoice.
+    It's a component, so no graph_id_fields.
+    """
     description: str = Field(
-        description="Description of the service or product",
-        examples=["Garden work", "Disposal of cuttings"]
+        ...,
+        description="Description of the product or service",
+        examples=["Monthly Software Subscription - Pro Plan", "Consulting Services (10.5 hours)"]
     )
-    quantity: float = Field(
-        description="The quantity of the item",
-        examples=[28.0, 1.0]
+    quantity: Optional[float] = Field(
+        1.0,
+        description="Quantity of the item",
+        examples=[1.0, 10.5, 50.0]
     )
-    unit: str = Field(
-        description="The unit of measurement for the quantity",
-        examples=["Std.", "pcs", "hours"]
+    unit_price: Optional[MonetaryAmount] = Field(
+        None,
+        description="Price per unit"
     )
-    unit_price: float = Field(
-        description="The price per unit",
-        examples=[120.00, 307.35]
+    line_total: Optional[MonetaryAmount] = Field(
+        None,
+        description="Total amount for this line (quantity * unit_price)"
     )
-    total: float = Field(
-        description="The total price for this line item (quantity * unit_price)",
-        examples=[3360.00, 307.35]
+    sku_or_item_code: Optional[str] = Field(
+        None,
+        description="Stock Keeping Unit or item code",
+        examples=["SUB-001-PRO", "SRV-CONS-HR"]
+    )
+    tax_rate: Optional[float] = Field(
+        None,
+        description="Tax rate applied to this line item (as a percentage)",
+        examples=[20.0, 5.5, 8.25]
+    )
+    
+    def __str__(self):
+        return self.description
+
+# --- Reusable Component: TaxDetail ---
+class TaxDetail(BaseModel):
+    """A component for detailing a specific tax applied to the whole invoice."""
+    description: str = Field(
+        ...,
+        description="Type of tax",
+        examples=["TVA", "Sales Tax", "VAT"]
+    )
+    rate: Optional[float] = Field(
+        None,
+        description="Tax rate as a percentage",
+        examples=[20.0, 8.25]
+    )
+    amount: Optional[MonetaryAmount] = Field(
+        None,
+        description="The total amount of this tax"
     )
 
-# --- Central Node with Edges ---
-
+# --- Root Document Model: Invoice ---
 class Invoice(BaseModel):
-    """The central node representing the entire invoice document."""
-    bill_no: str = Field(
-        description="The unique invoice identifier or bill number",
-        examples=["3139"]
+    """
+    The root model for a generic invoice, receipt, or bill.
+    It's identified by its invoice number.
+    """
+    model_config = ConfigDict(graph_id_fields=['invoice_number'])
+    
+    invoice_number: str = Field(
+        ...,
+        description="Unique identifier for the invoice",
+        examples=["INV-2024-00123", "F24-10-589", "8373-10-2024"]
     )
-    date: str = Field(
-        description="Date the invoice was issued, preferably in YYYY-MM-DD format",
-        examples=["01.07.2020"]
+    invoice_date: Optional[date] = Field(
+        None,
+        description="Date the invoice was issued (YYYY-MM-DD)",
+        examples=["2024-10-23"]
     )
-    currency: str = Field(
-        description="The currency of the invoice amounts (e.g., 'CHF', 'USD', 'EUR')",
-        examples=["CHF"]
+    due_date: Optional[date] = Field(
+        None,
+        description="Date payment is due (YYYY-MM-DD)",
+        examples=["2024-11-22"]
     )
-    subtotal: float = Field(
-        description="The total amount before tax or other fees",
-        examples=[3667.35]
+    payment_terms: Optional[str] = Field(
+        None,
+        description="Payment terms (e.g., Net 30, Due on receipt)",
+        examples=["Net 30", "Due on receipt", "NET 15"]
     )
-    vat_rate: float = Field(
-        description="The Value Added Tax rate as a percentage",
-        examples=[7.7]
+    
+    # Using the generic Organization model for both parties.
+    issuer: Optional[Organization] = Field(
+        None,
+        description="The organization issuing the invoice (seller, vendor)"
     )
-    vat_amount: float = Field(
-        description="The total amount of VAT charged",
-        examples=[282.40]
+    recipient: Optional[Organization] = Field(
+        None,
+        description="The organization receiving the invoice (buyer, customer)"
     )
-    total: float = Field(
-        description="The final, total amount to be paid",
-        examples=[3949.75]
+    
+    # This will be automatically detected as a list of edges to LineItem nodes.
+    line_items: List[LineItem] = Field(
+        default_factory=list
+    )
+    
+    # Using MonetaryAmount for all financial fields
+    subtotal: Optional[MonetaryAmount] = Field(
+        None,
+        description="The total amount before taxes and discounts"
+    )
+    total_tax_amount: Optional[MonetaryAmount] = Field(
+        None,
+        description="The total sum of all taxes"
+    )
+    total_amount: Optional[MonetaryAmount] = Field(
+        None,
+        description="The final amount due, including all taxes and fees"
+    )
+    amount_paid: Optional[MonetaryAmount] = Field(
+        None,
+        description="The amount already paid",
+        examples=[0.0]
+    )
+    amount_due: Optional[MonetaryAmount] = Field(
+        None,
+        description="The remaining balance to be paid (total - paid)"
+    )
+    
+    # List of component nodes for tax details
+    tax_details: List[TaxDetail] = Field(
+        default_factory=list,
+        description="A list of all taxes applied (e.g., VAT 20%)"
+    )
+    
+    notes: Optional[str] = Field(
+        None,
+        description="Any additional notes or comments on the invoice",
+        examples=["Thank you for your business!", "Please remit payment to..."]
     )
 
-    # --- Edge Definitions ---
-    issued_by: Organization = Edge(label="ISSUED_BY")
-    sent_to: Person = Edge(label="SENT_TO")
-    contains_items: List[LineItem] = Edge(label="CONTAINS_ITEM")
+    def __str__(self):
+        return f"Invoice {self.invoice_number}"
 

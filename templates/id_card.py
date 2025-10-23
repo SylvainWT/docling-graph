@@ -1,99 +1,149 @@
 """
-Pydantic schema for extracting information from a French Identity Card.
+Pydantic templates for ID Card extraction.
 
-This schema is designed for graph conversion. It defines distinct nodes for the
-cardholder's information and the document's technical details, linking them back
-to a central 'FrenchIDCard' node.
+This file is self-contained and has no external template dependencies.
+It includes all necessary sub-models and provides examples for each field.
 """
-from pydantic import BaseModel, Field
-from typing import Optional, List, Any
+from pydantic import BaseModel, ConfigDict, Field
+from typing import Optional, List
+from datetime import date
 
-# A special object to define graph edges, consistent with other templates
-def Edge(label: str, **kwargs: Any) -> Any:
-    """Helper function to create a Pydantic Field with edge metadata."""
-    return Field(..., json_schema_extra={'edge_label': label}, **kwargs)
-
-
-# --- Node Definitions ---
-
-class Location(BaseModel):
+# --- Reusable Component: Address ---
+class Address(BaseModel):
     """
-    Represents a geographical location, such as a city of birth.
-    This is a distinct node to allow for easier linking in a larger graph.
+    A flexible, generic model for a physical address.
+    It's treated as a component, so it has no graph_id_fields.
+    Its ID will be a hash of its content, making it unique to its context.
     """
-    city: str = Field(
-        description="The city, town, or municipality of birth.",
-        examples=["BORDEAUX", "PARIS"]
+    street_address: Optional[str] = Field(
+        None,
+        description="Street name and number",
+        examples=["123 Rue de la Paix", "90 Boulevard Voltaire"]
     )
-
-class HolderInformation(BaseModel):
-    """
-    Represents the personal information of the cardholder. This will become a 'Person' node in the graph.
-    """
-    surname: str = Field(
-        description="The last name or family name of the cardholder.",
-        examples=["CHEVAILLIER", "CRUISE"]
+    city: Optional[str] = Field(
+        None,
+        description="City",
+        examples=["Paris", "Lyon"]
     )
-    given_names: List[str] = Field(
-        description="A list of the cardholder's first and middle names.",
-        examples=[["Gisèle", "Audrey"], ["Thomas"]]
+    state_or_province: Optional[str] = Field(
+        None,
+        description="State, province, or region",
+        examples=["Île-de-France"]
     )
-    sex: str = Field(
-        description="The legal sex of the cardholder (e.g., 'F' or 'M').",
-        examples=["F", "M"]
+    postal_code: Optional[str] = Field(
+        None,
+        description="Postal or ZIP code",
+        examples=["75001", "69002"]
     )
-    date_of_birth: str = Field(
-        description="The cardholder's date of birth, typically in DD MM YYYY format.",
-        examples=["01 04 1995", "03 07 1962"]
-    )
-    nationality: str = Field(
-        description="The cardholder's nationality, often as a three-letter code.",
-        examples=["FRA"]
-    )
-    alternate_name: Optional[str] = Field(
-        default=None,
-        description="An alternate or usage name, such as a married name (Nom d'usage).",
-        examples=["vve. DUBOIS"]
+    country: Optional[str] = Field(
+        None,
+        description="Country",
+        examples=["France"]
     )
 
-    # --- Edge Definition ---
-    place_of_birth: Location = Edge(label="BORN_IN")
+    def __str__(self):
+        parts = [self.street_address, self.city, self.state_or_province, self.postal_code, self.country]
+        return ", ".join(p for p in parts if p)
 
-class DocumentDetails(BaseModel):
+# --- Reusable Entity: Person ---
+class Person(BaseModel):
     """
-    Represents the specific metadata and identifiers of the identity document itself. This will become a 'Document' node.
+    A generic model for a person.
+    A person is uniquely identified by their full name and date of birth.
     """
-    document_number: str = Field(
-        description="The unique alphanumeric identifier for the document.",
-        examples=["T7X62TZ79", "X4RTBPFW4"]
+    model_config = ConfigDict(graph_id_fields=['first_name', 'last_name', 'date_of_birth'])
+    
+    first_name: Optional[str] = Field(
+        None,
+        description="The person's given name(s)",
+        examples=["Marie", "Pierre", "Jean-Jacques"]
     )
-    expiry_date: str = Field(
-        description="The date the document expires, typically in DD MM YYYY format.",
-        examples=["27 01 2031", "11 02 2030"]
+    last_name: Optional[str] = Field(
+        None,
+        description="The person's family name (surname)",
+        examples=["Dupont", "Martin"]
     )
-    card_access_number: str = Field(
-        description="A secondary number or code on the card, possibly for electronic access.",
-        examples=["240220", "384213"]
+    date_of_birth: Optional[date] = Field(
+        None,
+        description="Date of birth in YYYY-MM-DD format",
+        examples=["1990-05-15"]
     )
+    place_of_birth: Optional[str] = Field(
+        None,
+        description="City and/or country of birth",
+        examples=["Paris", "Marseille (France)"]
+    )
+    gender: Optional[str] = Field(
+        None,
+        description="Gender or sex of the person",
+        examples=["F", "M", "Female", "Male"]
+    )
+    nationality: Optional[str] = Field(
+        None,
+        description="Nationality of the person",
+        examples=["Française", "French"]
+    )
+    phone: Optional[str] = Field(
+        None,
+        description="Contact phone number",
+        examples=["+33 6 12 34 56 78"]
+    )
+    email: Optional[str] = Field(
+        None,
+        description="Contact email address",
+        examples=["marie.dupont@email.fr"]
+    )
+    
+    # A person can have one or more addresses
+    addresses: List[Address] = Field(
+        default_factory=list,
+        description="List of physical addresses (e.g., home, work)"
+    )
+    
+    def __str__(self):
+        parts = [self.first_name, self.last_name]
+        return " ".join(p for p in parts if p)
 
-class FrenchIDCard(BaseModel):
+# --- Root Document Model: IDCard ---
+class IDCard(BaseModel):
     """
-    The central node representing the full French National Identity Card document.
+    A model for an identification document.
+    It is uniquely identified by its document number.
     """
+    model_config = ConfigDict(graph_id_fields=['document_number'])
+    
     document_type: str = Field(
-        description="The official type of the document.",
-        examples=["CARTE NATIONALE D'IDENTITÉ / IDENTITY CARD"]
+        "ID Card",
+        description="Type of document (e.g., ID Card, Passport, Driver's License)",
+        examples=["Carte Nationale d'Identité", "Passeport"]
     )
-    issuing_country: str = Field(
-        description="The country that issued the identity card.",
-        examples=["RÉPUBLIQUE FRANÇAISE"]
+    document_number: str = Field(
+        ...,
+        description="The unique identifier for the document",
+        examples=["23AB12345", "19XF56789"]
     )
-    country_code: str = Field(
-        description="The two-letter country code for the issuing authority.",
-        examples=["FR"]
+    issuing_country: Optional[str] = Field(
+        None,
+        description="The country that issued the document (e.g., 'France', 'République Française')",
+        examples=["France", "USA"]
+    )
+    issue_date: Optional[date] = Field(
+        None,
+        description="Date the document was issued, in YYYY-MM-DD format",
+        examples=["2023-01-20"]
+    )
+    expiry_date: Optional[date] = Field(
+        None,
+        description="Date the document expires, in YYYY-MM-DD format",
+        examples=["2033-01-19"]
+    )
+    
+    # This creates a graph edge "holder" to a "Person" node.
+    holder: Optional[Person] = Field(
+        None,
+        description="The person this card belongs to"
     )
 
-    # --- Edge Definitions ---
-    holder_information: HolderInformation = Edge(label="HELD_BY")
-    document_details: DocumentDetails = Edge(label="HAS_DETAILS")
+    def __str__(self):
+        return f"{self.document_type} {self.document_number}"
 
