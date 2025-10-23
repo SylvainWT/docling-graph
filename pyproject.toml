@@ -9,9 +9,9 @@ version = "0.1.0"
 description = "A tool to convert documents into knowledge graphs using Docling."
 readme = "README.md"
 requires-python = ">=3.9"
+license = { text = "MIT License" }
 classifiers = [
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
 # Add all dependencies from requirements.txt here
@@ -22,7 +22,6 @@ dependencies = [
     "pymupdf",
     "plotly",
     "matplotlib",
-    "pygraphviz", # Note: Still requires system-level install
     "rich",
     "typer[all]",
     "mistralai",
@@ -38,3 +37,6 @@ Issues = "https://github.com/ayoub-ibm/docling-graph/issues"
 [project.scripts]
 # This is the magic line that creates the `docling-graph` command
 docling-graph = "docling_graph.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["docling_graph*"]

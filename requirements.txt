@@ -10,6 +10,7 @@ matplotlib
 
 ### CLI Libraries ###
 rich
+dotenv
 typer[all]
 
 ### Notebook & Utility Libraries ###
@@ -23,7 +24,7 @@ google-generativeai
 ibm-watson-machine-learning
 
 ### Hierarchical Graph Layouts ###
-pygraphviz
+#pygraphviz
 
 # Note: Requires system-level installation of Graphviz
 # On Debian/Ubuntu: sudo apt-get install graphviz graphviz-dev

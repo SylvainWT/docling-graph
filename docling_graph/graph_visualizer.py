@@ -9,10 +9,12 @@ import plotly.graph_objects as go
 
 def _ensure_output_dir(output_dir="outputs"):
     """Helper function to create the output directory if it doesn't exist."""
+    if output_dir is None:
+        output_dir = "outputs"
     os.makedirs(output_dir, exist_ok=True)
     return output_dir
 
-def create_static_graph(graph: nx.DiGraph, filename: str = "knowledge_graph_static.png"):
+def create_static_graph(graph: nx.DiGraph, filename: str = "knowledge_graph_static"):
     """
     Draws the graph as a static image with node properties displayed next to the nodes.
 
@@ -24,8 +26,9 @@ def create_static_graph(graph: nx.DiGraph, filename: str = "knowledge_graph_stat
         print("Graph is empty. Nothing to draw.")
         return
 
-    output_dir = _ensure_output_dir()
-    output_path = os.path.join(output_dir, filename)
+    output_dir = os.path.dirname(filename)
+    _ensure_output_dir(output_dir)
+    output_path = f"{filename}.png"
 
     plt.figure(figsize=(24, 18))
     
@@ -69,7 +72,7 @@ def create_static_graph(graph: nx.DiGraph, filename: str = "knowledge_graph_stat
     plt.show()
     print(f"Static graph with properties saved to {output_path}")
 
-def create_interactive_graph(graph: nx.DiGraph, filename: str = "knowledge_graph_interactive.html") -> str:
+def create_interactive_graph(graph: nx.DiGraph, filename: str = "knowledge_graph_interactive") -> str:
     """
     Creates a high-quality, interactive Plotly visualization.
     
@@ -80,8 +83,9 @@ def create_interactive_graph(graph: nx.DiGraph, filename: str = "knowledge_graph
     Returns:
         str: The absolute path to the generated HTML file.
     """
-    output_dir = _ensure_output_dir()
-    output_path = os.path.join(output_dir, filename)
+    output_dir = os.path.dirname(filename)
+    _ensure_output_dir(output_dir)
+    output_path = f"{filename}.html"
     
     try:
         pos = nx.nx_agraph.graphviz_layout(graph, prog="dot")
@@ -126,3 +130,51 @@ def create_interactive_graph(graph: nx.DiGraph, filename: str = "knowledge_graph
     fig.write_html(output_path)
     print(f"Interactive Plotly graph saved to: {output_path}")
     return output_path
+
+def create_markdown_report(graph: nx.Graph, filename: str = "knowledge_graph_report"):
+    """
+    Saves a human-readable summary of the graph nodes and edges to a markdown file,
+    using the same output directory logic as `create_static_graph`.
+    """
+    if not graph or graph.number_of_nodes() == 0:
+        print("Graph is empty. Skipping markdown report.")
+        return
+
+    output_dir = os.path.dirname(filename)
+    _ensure_output_dir(output_dir)
+    output_path = f"{filename}.md"
+
+    md_content = []
+    md_content.append("# Knowledge Graph Report\n")
+    md_content.append("---\n")
+    md_content.append("## Nodes (with properties):\n")
+
+    # --- Nodes ---
+    for node_id, data in graph.nodes(data=True):
+        label = data.get("label", node_id)
+        md_content.append(f"### Node: {label} (`{node_id}`)")
+        if data:
+            for key, value in data.items():
+                md_content.append(f"- **{key}**: {value}")
+        else:
+            md_content.append("- *(no properties)*")
+        md_content.append("")  # Blank line for readability
+
+    # --- Edges ---
+    md_content.append("## Edges (with labels):\n")
+    for u, v, data in graph.edges(data=True):
+        u_label = graph.nodes[u].get('label', u)
+        v_label = graph.nodes[v].get('label', v)
+        edge_label = data.get('label', 'HAS_RELATION')
+        md_content.append(f"- **{u_label} → {v_label}**  `{edge_label}`")
+
+    md_content.append("\n---\n")
+    md_content.append("_End of Graph Summary_\n")
+
+    # Write to file
+    try:
+        with open(output_path, "w", encoding="utf-8") as f:
+            f.write("\n".join(md_content))
+        print(f"Markdown report saved at: {output_path}")
+    except Exception as e:
+        print(f"Error saving markdown report: {e}")

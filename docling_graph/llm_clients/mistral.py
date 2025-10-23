@@ -1,9 +1,13 @@
 import os
 import json
 from typing import Dict, Any
-from mistralai.client import Mistral
+from mistralai import Mistral
 from rich import print
+from dotenv import load_dotenv
 from .base import BaseLlmClient
+
+# Load environment variables from .env file
+load_dotenv()
 
 class MistralClient(BaseLlmClient):
     """Mistral API implementation of the LLM Client."""
@@ -27,7 +31,8 @@ class MistralClient(BaseLlmClient):
 
     def get_json_response(self, prompt: str, schema_json: str) -> Dict[str, Any]:
         """Executes the Mistral chat.complete call."""
-        res = self.client.chat.complete(
+        # This is the corrected API call based on your snippet from the docs
+        res = self.client.chat(
             model=self.model,
             messages=[{"role": "user", "content": prompt}],
             response_format={"type": "json_object"},

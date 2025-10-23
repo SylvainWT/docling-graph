@@ -17,7 +17,7 @@ from .llm_clients.ollama import OllamaClient
 # (Add future clients here, e.g., OpenAiClient)
 
 from .graph_converter import GraphConverter
-from .graph_visualizer import create_static_graph
+from .graph_visualizer import create_static_graph, create_interactive_graph, create_markdown_report
 
 def _load_template_class(template_str: str):
     """Dynamically imports a Pydantic model class from a string."""
@@ -32,72 +32,55 @@ def _load_template_class(template_str: str):
         print(f"[red]Failed to load template {template_str}:[/red] {e}")
         raise
 
-def _get_llm_client(provider: str, model: str) -> BaseLlmClient:
-    """Factory function to create an LLM client."""
-    if provider == "mistral":
+def _initialize_llm_client(config: Dict[str, Any]) -> BaseLlmClient:
+    """Initializes an LLM client from configuration."""
+    client_type = config.get("client")
+    model = config.get("model")
+    
+    if client_type == "mistral":
         return MistralClient(model=model)
-    elif provider == "ollama":
+    elif client_type == "ollama":
         return OllamaClient(model=model)
-    # elif provider == "openai":
-    #     return OpenAiClient(model=model) 
+    # (Add other clients here)
     else:
-        raise NotImplementedError(f"Provider '{provider}' not supported.")
+        raise ValueError(f"Unknown LLM client type: {client_type}")
 
 def run_pipeline(config: Dict[str, Any]):
     """
-    Runs the complete extraction and graph conversion pipeline based on config.
+    Runs the full extraction and graph conversion pipeline based on a config dict.
     """
+    print("--- [blue]Starting Docling-Graph Pipeline[/blue] ---")
     
-    pipeline_config = config["pipeline"]
+    # 1. Load Template
+    try:
+        TemplateClass = _load_template_class(config["template"])
+    except Exception:
+        return # Error is printed in the helper
+
+    # 2. Initialize Extractor
+    mode = config.get("pipeline_mode", "one_to_one")
+    etype = config.get("extractor_type", "local_vlm")
     
-    # 1. Get final model and provider, applying overrides
-    model = config.get("model_override") or pipeline_config.get("default_model")
-    provider = config.get("provider_override") or pipeline_config.get("provider")
-
-    if not model and pipeline_config.get("extractor_type") != "local_vlm":
-        print(f"[red]Error:[/red] No model specified for this pipeline.")
-        print("Set 'default_model' in the config or use --model.")
-        return
-    elif not model and pipeline_config.get("extractor_type") == "local_vlm":
-        model = "numind/NuExtract-2.0-2B" # Default for local_vlm
-        print(f"[yellow]No model specified, using default for local_vlm: {model}[/yellow]")
-
-
-    # 2. Load Pydantic Template
-    TemplateClass = _load_template_class(config["template"])
-
-    # 3. Select and Initialize Extractor based on config
     extractor = None
-    mode = pipeline_config.get("processing_mode")
-    etype = pipeline_config.get("extractor_type")
-
     try:
         if mode == "one_to_one" and etype == "local_vlm":
-            extractor = OneToOneLocalExtractor(model_repo_id=model)
+            print("Using pipeline: [cyan]One-to-One (Local VLM)[/cyan]")
+            model_repo = config.get("model_repo_id", "numind/NuExtract-2.0-2B")
+            extractor = OneToOneLocalExtractor(model_name=model_repo) 
         
-        elif mode == "one_to_one" and etype == "api":
-            if not provider:
-                raise ValueError("'provider' is required for 'one_to_one_api' pipeline")
-            # --- This logic is now refactored ---
-            client = _get_llm_client(provider=provider, model=model)
-            extractor = OneToOneApiExtractor(client=client)
+        elif mode == "one_to_one" and etype == "api_docling":
+            print("Using pipeline: [cyan]One-to-One (Docling API)[/cyan]")
+            extractor = OneToOneApiExtractor() # Assumes API key is in env
         
-        elif mode == "many_to_one":
-            client: BaseLlmClient = None
-            if etype == "api":
-                if not provider:
-                    raise ValueError("'provider' is required for 'many_to_one_api' pipeline")
-                client = _get_llm_client(provider=provider, model=model)
-            
-            elif etype == "local_llm":
-                # For many_to_one local, the "provider" is the client type
-                client = _get_llm_client(provider="ollama", model=model) 
-            
-            else:
-                raise ValueError(f"Invalid extractor_type '{etype}' for 'many_to_one' mode.")
-            
-            extractor = ManyToOneExtractor(client=client)
-
+        elif mode == "many_to_one" and etype == "local_llm":
+            print("Using pipeline: [cyan]Many-to-One (Local LLM)[/cyan]")
+            llm_config = config.get("llm")
+            if not llm_config:
+                print("[red]Error:[/red] 'llm' configuration is required for 'many_to_one' pipeline.")
+                return
+            llm_client = _initialize_llm_client(llm_config)
+            extractor = ManyToOneExtractor(llm_client=llm_client)
+        
         else:
             print(f"[red]Error:[/red] Invalid pipeline configuration: mode='{mode}', extractor='{etype}'")
             return
@@ -106,8 +89,15 @@ def run_pipeline(config: Dict[str, Any]):
         print(f"[red]Failed to initialize extractor:[/red] {e}")
         return
 
-    # 4. Run Extraction (This now *always* returns a list)
-    extracted_models = extractor.extract(source=config["source"], template=TemplateClass)
+    # 4. Run Extraction
+    extracted_data = extractor.extract(config["source"], TemplateClass)
+
+    extracted_models = []
+    if extracted_data:
+        if isinstance(extracted_data, list):
+            extracted_models = extracted_data
+        else:
+            extracted_models = [extracted_data] # Wrap single object in a list
 
     if not extracted_models:
         print("[red]Pipeline stopped: Extraction returned no data.[/red]")
@@ -126,10 +116,16 @@ def run_pipeline(config: Dict[str, Any]):
     output_dir = Path(config.get("output_dir", "outputs"))
     output_dir.mkdir(parents=True, exist_ok=True)
     base_name = Path(config["source"]).stem
-    output_filename = f"{base_name}_graph.png"
+    output_filename = f"{base_name}_graph"
     output_path = output_dir / output_filename
 
-    print(f"Saving static graph visualization to [green]{output_path}[/green]...")
-    create_static_graph(knowledge_graph, filename=str(output_path))
+    print(f"Saving markdown graph report to [green]{output_dir}[/green]")
+    create_markdown_report(knowledge_graph, output_path)
     
-    print("[bold green]Pipeline finished successfully.[/bold green]")
+    print(f"Saving interactive graph to [green]{output_path}[/green]")
+    create_interactive_graph(knowledge_graph, output_path)
+    
+    print(f"Saving static graph visualization to [green]{output_path}[/green]")
+    create_static_graph(knowledge_graph, output_path)
+
+    print("--- [blue]Pipeline Finished Successfully[/blue] ---")
