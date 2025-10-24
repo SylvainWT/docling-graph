@@ -77,5 +77,8 @@ ehthumbs.db
 Thumbs.db
 
 # Project specific directories
-data
-outputs
+data/*
+!data/.gitkeep
+
+outputs/*
+!outputs/.gitkeep
