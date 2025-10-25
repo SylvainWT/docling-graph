@@ -4,9 +4,9 @@ from rich import print
 import importlib
 
 # Import LLM Clients
+from .llm_clients.llm_base import BaseLlmClient
 from .llm_clients.mistral import MistralClient
 from .llm_clients.ollama import OllamaClient
-from .llm_clients.base import BaseLlmClient
 
 from .extractors.factory import ExtractorFactory
 from .graph_converter import GraphConverter

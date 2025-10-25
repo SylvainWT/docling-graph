@@ -41,3 +41,57 @@ docling-graph = "docling_graph.cli.main:main"
 
 [tool.setuptools.packages.find]
 include = ["docling_graph*"]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+check_untyped_defs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_optional = true
+strict_equality = true
+
+[[tool.mypy.overrides]]
+module = [
+    "docling.*",
+    "rich.*",
+    "typer.*",
+    "yaml.*",
+    "mypy.*",
+    "pandas.*",
+    "networkx.*",
+    "matplotlib.*",
+    "pyvis.*",
+    "ollama.*",
+    "mistralai.*",
+    "openai.*",
+    "google.generativeai.*"
+]
+ignore_missing_imports = true
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings  
+    "F",   # pyflakes
+    "I",   # isort
+    "N",   # pep8-naming
+    "UP",  # pyupgrade
+    "ANN", # flake8-annotations
+    "B",   # flake8-bugbear
+    "A",   # flake8-builtins
+    "C4",  # flake8-comprehensions
+]
+ignore = [
+    "ANN101",  # Missing type annotation for self
+    "ANN102",  # Missing type annotation for cls
+    "ANN401",  # Dynamically typed expressions (Any)
+]

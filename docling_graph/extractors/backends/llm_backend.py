@@ -3,12 +3,14 @@ LLM (Language Model) extraction backend.
 Handles document extraction using LLM models (local or API).
 """
 import json
+import gc
+
 from pydantic import BaseModel, ValidationError
 from typing import Type, Optional
 from rich import print
-from ...llm_clients.base import BaseLlmClient
+
+from ...llm_clients.llm_base import BaseLlmClient
 from ...llm_clients.prompts import get_prompt
-import gc
 
 class LlmBackend:
     """Backend for LLM-based extraction (local or API)."""

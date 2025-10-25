@@ -1,7 +1,7 @@
-import json
+from .llm_base import BaseLlmClient
 from typing import Dict, Any
 from rich import print
-from .base import BaseLlmClient
+import json
 
 # Requires `pip install ollama`
 try:

@@ -4,11 +4,11 @@ Factory for creating extractors based on configuration.
 
 from rich import print
 
-from .strategies.one_to_one import OneToOneStrategy
 from .strategies.many_to_one import ManyToOneStrategy
+from .strategies.one_to_one import OneToOneStrategy
+from ..llm_clients.llm_base import BaseLlmClient
 from .backends.vlm_backend import VlmBackend
 from .backends.llm_backend import LlmBackend
-from ..llm_clients.base import BaseLlmClient
 
 
 class ExtractorFactory:

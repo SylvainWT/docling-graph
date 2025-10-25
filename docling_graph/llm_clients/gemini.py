@@ -4,7 +4,7 @@ import os
 from typing import Dict, Any
 from google import genai
 
-from .base import BaseLlmClient
+from .llm_base import BaseLlmClient
 from dotenv import load_dotenv
 from rich import print
 

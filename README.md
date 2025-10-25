@@ -11,12 +11,14 @@
 [![Python 3.10 | 3.11 | 3.12](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue)](https://www.python.org/downloads/)
 [![Pydantic v2](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/pydantic/pydantic/main/docs/badge/v2.json)](https://pydantic.dev)
 [![NetworkX](https://img.shields.io/badge/NetworkX-3.0+-orange)](https://networkx.org/)
+![Mypy](https://img.shields.io/badge/type--checked-mypy-blue?logo=python&logoColor=white)
 [![Typer](https://img.shields.io/badge/Typer-CLI-purple)](https://typer.tiangolo.com/)
 [![Rich](https://img.shields.io/badge/Rich-terminal-cyan)](https://github.com/Textualize/rich)
 [![Mistral AI](https://img.shields.io/badge/Mistral-API-ff7000)](https://mistral.ai/)
 [![Ollama](https://img.shields.io/badge/Ollama-compatible-black)](https://ollama.ai/)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 [![License MIT](https://img.shields.io/github/license/ayoub-ibm/docling-graph)](https://opensource.org/licenses/MIT)
+[![LF AI & Data](https://img.shields.io/badge/LF%20AI%20%26%20Data-003778?logo=linuxfoundation&logoColor=fff&color=0094ff&labelColor=003778)](https://lfaidata.foundation/projects/)
 
 
 Docling-Graph converts PDFs and images into validated **Pydantic** objects and then into a **directed knowledge graph**, with exports to CSV or Cypher and both static and interactive visualizations.  
@@ -286,9 +288,8 @@ Parameters:
 ### 1. Immediate Priorities
 
 - **Critical**: Add comprehensive test suite
-- **High**: Improve type safety with Protocol definitions
-- **High**: Standardize error handling with custom exceptions
 - **High**: Add input validation and security measures
+- **High**: Standardize error handling with custom exceptions
 - **Medium**: Performance optimizations (caching, async, batching)
 
 
