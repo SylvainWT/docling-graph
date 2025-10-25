@@ -6,7 +6,7 @@ the language model, improving the accuracy and consistency of the extracted data
 The schema is designed to be converted into a knowledge graph.
 """
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional, List, Any
 
 # A special object to define graph edges
@@ -19,6 +19,8 @@ def Edge(label: str, **kwargs: Any) -> Any:
 
 class Address(BaseModel):
     """Represents a physical address entity."""
+    model_config = ConfigDict(is_entity=False)
+    
     street: str = Field(
         description="Street name and number",
         examples=["Marktgasse 28", "Rue du Lac 1268"]

@@ -21,11 +21,9 @@ def Edge(label: str, **kwargs: Any) -> Any:
 
 # --- Reusable Component: Address ---
 class Address(BaseModel):
-    """
-    A flexible, generic model for a physical address.
-    It's treated as a component, so it has no graph_id_fields.
-    Its ID will be a hash of its content, making it unique to its context.
-    """
+    """Represents a physical address entity."""    
+    model_config = ConfigDict(is_entity=False)
+    
     street_address: Optional[str] = Field(
         None,
         description="Street name and number",
@@ -51,9 +49,10 @@ class Address(BaseModel):
         description="Country",
         examples=["France"]
     )
-
+    
     def __str__(self):
-        parts = [self.street_address, self.city, self.state_or_province, self.postal_code, self.country]
+        parts = [self.street_address, self.city, self.state_or_province, 
+                 self.postal_code, self.country]
         return ", ".join(p for p in parts if p)
 
 # --- Reusable Entity: Person ---

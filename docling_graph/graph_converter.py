@@ -16,7 +16,7 @@ from pydantic import BaseModel
 from decimal import Decimal
 
 from typing import List, Any, Set, Optional
-from .graph_models import Edge
+from .models import Edge
 
 class GraphConverter:
     """
@@ -78,11 +78,26 @@ class GraphConverter:
     def _get_node_id(self, model_instance: BaseModel) -> str:
         """
         Generate a unique, stable node ID for a Pydantic model instance.
+        
+        For components (is_entity=False), creates globally unique IDs based on content only.
+        For entities (is_entity=True), creates IDs based on configured fields or all attributes.
         """
         node_label = model_instance.__class__.__name__
         config = getattr(model_instance, 'model_config', {})
         id_fields = config.get('graph_id_fields', [])
-
+        
+        # NEW: Check if this is an "entity" vs "component"
+        is_entity = config.get('is_entity', True)  # Default: treat as entity
+        
+        if not is_entity:
+            # Components (like Address, MonetaryAmount) should be globally unique by content
+            # Include class name but NOT parent context
+            attr_dict = self._get_hashable_attributes(model_instance)
+            id_string = json.dumps(attr_dict, sort_keys=True)
+            hash_id = hashlib.md5(id_string.encode()).hexdigest()
+            return f"{node_label}_{hash_id[:12]}"
+        
+        # For entities: use existing logic with graph_id_fields or full hash
         if id_fields:
             id_parts = []
             for field in id_fields:
@@ -103,9 +118,10 @@ class GraphConverter:
             
             id_string = ":".join(id_parts)
         else:
+            # Hash all attributes for entities without explicit ID fields
             attr_dict = self._get_hashable_attributes(model_instance)
             id_string = json.dumps(attr_dict, sort_keys=True)
-
+        
         hash_id = hashlib.md5(id_string.encode()).hexdigest()
         return f"{node_label}_{hash_id[:12]}"
 

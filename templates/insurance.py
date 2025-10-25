@@ -23,12 +23,14 @@ class MonetaryAmount(BaseModel):
     No graph_id_fields, as it's a value object.
     """
     
+    model_config = ConfigDict(is_entity=False)  # Component: deduplicate by content
+    
     value: float = Field(
         ...,
         description="The numeric value of the amount",
         examples=[500.00, 150000.00, 75.50, 1200.00, 89.90]
     )
-    
+
     currency: Optional[str] = Field(
         None,
         description="The ISO 4217 currency code",
@@ -49,10 +51,8 @@ class MonetaryAmount(BaseModel):
 # --- Reusable Component: Address ---
 
 class Address(BaseModel):
-    """
-    A flexible, generic model for a physical address.
-    It's treated as a component, so it has no graph_id_fields.
-    """
+    """Represents a physical address entity."""    
+    model_config = ConfigDict(is_entity=False)
     
     street_address: Optional[str] = Field(
         None,
