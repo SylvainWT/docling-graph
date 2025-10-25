@@ -1,4 +1,8 @@
-# Docling-Graph: Document to Knowledge Graph
+<p align="center">
+  <img src="docs/logo.png" alt="Docling Graph" width="300">
+</p>
+
+# Docling-Graph
 
 Docling-Graph converts PDFs and images into validated **Pydantic** objects and then into a **directed knowledge graph**, with exports to CSV or Cypher and both static and interactive visualizations.  
 
