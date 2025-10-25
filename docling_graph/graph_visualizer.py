@@ -98,7 +98,7 @@ def create_static_graph(
             font_color='#B35045',
             font_size=12,
             font_weight='bold',
-            bbox=dict(boxstyle='round,pad=0.3', fc='white', ec='none', alpha=0.8),
+            bbox=dict(boxstyle='round,pad=0.2', fc='white', ec='none', alpha=0.8),
             ax=ax
         )
 
@@ -137,11 +137,11 @@ def create_static_graph(
                     props_text = '\n'.join(props_lines)
 
                     ax.text(
-                        x + 0.12, y, props_text,
+                        x + 0.04, y, props_text,
                         ha='left', va='center',
                         fontsize=8,
                         family='monospace',
-                        bbox=dict(boxstyle='round,pad=0.5', fc='#FFF8DC',
+                        bbox=dict(boxstyle='round,pad=0.2', fc='#FFF8DC',
                                 ec='#2C3E50', alpha=0.95, linewidth=1.5),
                         zorder=5
                     )

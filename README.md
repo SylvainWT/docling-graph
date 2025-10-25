@@ -20,13 +20,26 @@ The toolkit supports two extraction families: **local VLM** via Docling and **LL
   - Local VLM (Docling’s VLM pipeline)  
   - LLM (local via Ollama or API via Mistral)  
   - Page-wise or whole-document strategies
-- **Graph Construction**: Convert validated Pydantic instances to a NetworkX DiGraph with rich edge metadata and stable node IDs.
+- **Graph Construction**:
+  - Markdown to Graph: Convert validated Pydantic instances to a NetworkX DiGraph with rich edge metadata and stable node IDs
+  - Smart Merge: Combine multi-page documents into a single Pydantic instance for unified processing
 - **Export**:
   - CSV compatible with Neo4j admin import  
   - Cypher script generation for bulk ingestion
 - **Visualization**:
   - Interactive Pyvis HTML with improved tooltips and physics  
   - Publication-grade static images (PNG, SVG, PDF)
+
+
+
+## Data Flow
+
+1. **Input**: Document file (PDF, image)
+2. **Conversion**: Docling converts to structured format
+3. **Extraction**: LLM/VLM extracts data into Pydantic models
+4. **Validation**: Pydantic validates against template schema
+5. **Graph Creation**: GraphConverter builds NetworkX graph
+6. **Export**: Multiple output formats generated
 
 
 
@@ -70,8 +83,8 @@ docling-graph convert <SOURCE> --template "<TEMPLATE_PATH>" [OPTIONS]
 ```yaml
 defaults:
   processing_mode: many-to-one    # one-to-one | many-to-one
-  model_type: llm                 # llm | vlm
-  inference: local                # local | api
+  backend_type: llm                 # llm | vlm
+  inference: local                # local | remote
   export_format: csv              # csv | cypher
 
 docling:
@@ -107,7 +120,7 @@ output:
 
 **Notes**:
 
-- VLM extraction is **local-only**; `--model-type vlm` with `--inference api` is invalid.
+- VLM extraction is **local-only**; `--backend_type vlm` with `--inference remote` is invalid.
 - `docling.pipeline` only affects the LLM path (default OCR vs VLM pipeline).
 
 
@@ -126,8 +139,8 @@ docling-graph convert [OPTIONS] SOURCE
 **Optional dimensions**:
 
 - `--processing-mode, -p` : `one-to-one` | `many-to-one`  
-- `--model-type, -m` : `llm` | `vlm`  
-- `--inference, -i` : `local` | `api`  
+- `--backend_type, -b` : `llm` | `vlm`  
+- `--inference, -i` : `local` | `remote`  
 - `--docling-config, -d` : `default` (OCR) | `vlm` (VLM pipeline)  
 - `--output-dir, -o` : Output directory (default: `outputs`)  
 - `--model` : Override model name  
@@ -144,14 +157,14 @@ The CLI validates all options and fails fast on unsupported or conflicting combi
 ```bash
 docling-graph convert data/invoices.pdf \
   --template "docling_graph.invoice.Invoice" \
-  -p one-to-one -m vlm -i local -d vlm -o outputs
+  -p one-to-one b vlm -i local -d vlm -o outputs
 ```
 
 - **Local LLM via Ollama, many-to-one**, default OCR pipeline:
 ```bash
 docling-graph convert data/policy.pdf \
   --template "docling_graph.insurance.InsuranceTerms" \
-  -p many-to-one -m llm -i local --provider ollama \
+  -p many-to-one -b llm -i local --provider ollama \
   --model "llama3:8b-instruct" -d default -o outputs
 ```
 
@@ -160,14 +173,14 @@ docling-graph convert data/policy.pdf \
 export MISTRAL_API_KEY="your_api_key_here"
 docling-graph convert data/policy.pdf \
   --template "docling_graph.insurance.InsuranceTerms" \
-  -p many-to-one -m llm -i api --provider mistral -o outputs
+  -p many-to-one -b llm -i remote --provider mistral -o outputs
 ```
 
 - **Export graph as Cypher instead of CSV**:
 ```bash
 docling-graph convert data/id_card.png \
   --template "docling_graph.id_card.IDCard" \
-  -p many-to-one -m llm -i local -e cypher -o outputs
+  -p many-to-one -b llm -i local -e cypher -o outputs
 ```
 
 
@@ -202,6 +215,7 @@ docling-graph convert data/id_card.png \
 
 - Use `model_config.graph_id_fields` for natural keys to ensure stable node IDs.  
 - Include examples and descriptions on fields for better LLM extraction.
+- Please refer to the [Pydantic Templates for Knowledge Graph Extraction](docs/pydantic_templates_for_knowledge_graph_extraction.md) guide for more details.
 
 
 
@@ -228,7 +242,7 @@ Parameters:
 ## Troubleshooting
 
 - **Config not found**: Run `docling-graph init`  
-- **VLM with API not supported**: Use `--inference local` or `--model-type llm`  
+- **VLM with API not supported**: Use `--inference local` or `--backend_type llm`  
 - **Template import failed**: Verify the dotted path  
 - **Ollama connection error**: Ensure service is running and model is pulled  
 - **Mistral key not set**: Export `MISTRAL_API_KEY` or add to `.env`
@@ -237,7 +251,10 @@ Parameters:
 
 ## TODO List
 
-- **Expanded LLM Provider Support**: Add compatibility for additional LLM providers beyond the current Ollama and Mistral integrations.
-- **Add Graph Database Connectivity**: Enable direct loading of generated graphs into graph databases like Neo4j.
+- **Expanded LLM Provider Support**: Add compatibility for additional LLM providers like WatsonX and vLLM.
+- **Add Graph Database Connectivity**: Enable direct or batch loading of generated graphs into graph databases like Neo4j.
 - **Implement docling-graph query Command**: Add a CLI feature that allows querying and interacting with generated document graphs, for example through LangChain.
-- **Interactive Pydantic Model Generation**: Introduce prompts to help users generate Pydantic templates directly from documents.
+- **Interactive Pydantic Model Generation**: Introduce prompts to help users generate Pydantic templates directly from documents, using the detailed guide from documentation.
+- **Improve Component Instantiation**: Refactor class and model initialization to support user-defined components, allowing flexible injection or replacement of default implementations.
+- **Refactor Batch Processing for Local GPU Inference**: Optimize batch handling to improve efficiency and performance during local inference on GPU.
+- **Store Markdown Conversion Output**: Add functionality to save the output generated by the Docling converter in Markdown format for later use or reference.

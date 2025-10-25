@@ -9,6 +9,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from typing import List, Optional, Union, Any
 from datetime import date
 
+
 # --- Edge Helper Function ---
 
 def Edge(label: str, **kwargs: Any) -> Any:
@@ -360,7 +361,7 @@ class InsuranceTerms(BaseModel):
     
     model_config = ConfigDict(graph_id_fields=['document_reference'])
     
-    # ✓ Changed to Optional with default to handle options-only documents
+    # Changed to Optional with default to handle options-only documents
     document_reference: Optional[str] = Field(
         default="UNKNOWN",
         description="Reference identifier or version of the terms document",

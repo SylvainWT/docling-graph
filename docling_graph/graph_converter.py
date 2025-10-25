@@ -285,7 +285,7 @@ class GraphConverter:
 
         # Add graph metadata
         self.graph.graph['created_at'] = datetime.now().isoformat()
-        self.graph.graph['model_types'] = list(set(m.__class__.__name__ for m in models))
+        self.graph.graph['backend_types'] = list(set(m.__class__.__name__ for m in models))
         self.graph.graph['num_root_entities'] = len(models)
         self.graph.graph['has_reverse_edges'] = self.add_reverse_edges
 
@@ -326,7 +326,7 @@ class GraphConverter:
         return {
             "metadata": {
                 "created_at": self.graph.graph.get('created_at'),
-                "model_types": self.graph.graph.get('model_types', []),
+                "backend_types": self.graph.graph.get('backend_types', []),
                 "num_root_entities": self.graph.graph.get('num_root_entities', 0),
                 "num_nodes": self.graph.graph.get('num_nodes', 0),
                 "num_edges": self.graph.graph.get('num_edges', 0),

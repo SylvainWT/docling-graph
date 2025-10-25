@@ -82,19 +82,19 @@ def convert_command(
         help="Processing strategy: 'one-to-one' (per page) or 'many-to-one' (entire document)."
     )] = "many-to-one",
     
-    model_type: Annotated[str, typer.Option(
-        "--model-type", "-m",
-        help="Model type: 'llm' (Language Model) or 'vlm' (Vision-Language Model)."
-    )] = "llm",
+    backend_type: Annotated[str, typer.Option(
+        "--backend_type", "-b",
+        help="Backend type: 'llm' (Language Model) or 'vlm' (Vision-Language Model)."
+    )] = "vlm",
     
     inference: Annotated[str, typer.Option(
         "--inference", "-i",
-        help="Inference location: 'local' or 'api'."
+        help="Inference location: 'local' or 'remote'."
     )] = "local",
 
     docling_config: Annotated[str, typer.Option(
         "--docling-config", "-d",
-        help="Docling pipeline configuration: 'default' (OCR) or 'vlm' (Vision-Language Model)."
+        help="Docling pipeline configuration: 'ocr' or 'vision' (Vision-Language Model)."
     )] = None,
     
     # --- Optional Overrides ---
@@ -118,7 +118,12 @@ def convert_command(
     export_format: Annotated[str, typer.Option(
         "--export-format", "-e",
         help="Format to export the graph data (csv or cypher)."
-    )] = "csv"
+    )] = "csv",
+
+    reverse_edges: Annotated[bool, typer.Option(
+        "--reverse-edges", "-r",
+        help="Create bidirectional edges in the knowledge graph for easier querying."
+    )] = False
 ):
     """
     Main CLI command to convert a document to a knowledge graph.
@@ -133,26 +138,26 @@ def convert_command(
 
     # Use CLI values if provided, otherwise fall back to config defaults
     processing_mode = (processing_mode or defaults.get('processing_mode', 'many-to-one')).lower()
-    model_type = (model_type or defaults.get('model_type', 'llm')).lower()
+    backend_type = (backend_type or defaults.get('backend_type', 'llm')).lower()
     inference = (inference or defaults.get('inference', 'local')).lower()
     export_format = (export_format or defaults.get('export_format', 'csv')).lower()
-    docling_config = (docling_config or config_data.get('docling', {}).get('pipeline', 'default')).lower()
+    docling_config = (docling_config or config_data.get('docling', {}).get('pipeline', 'ocr')).lower()
     
     # Arguments validation
     if processing_mode not in ["one-to-one", "many-to-one"]:
         print(f"[red]Error:[/red] Invalid processing mode '{processing_mode}'. Must be 'one-to-one' or 'many-to-one'.")
         raise typer.Exit(code=1)
     
-    if model_type not in ["llm", "vlm"]:
-        print(f"[red]Error:[/red] Invalid model type '{model_type}'. Must be 'llm' or 'vlm'.")
+    if backend_type not in ["llm", "vlm"]:
+        print(f"[red]Error:[/red] Invalid mackend type '{backend_type}'. Must be 'llm' or 'vlm'.")
         raise typer.Exit(code=1)
     
-    if inference not in ["local", "api"]:
-        print(f"[red]Error:[/red] Invalid inference location '{inference}'. Must be 'local' or 'api'.")
+    if inference not in ["local", "remote"]:
+        print(f"[red]Error:[/red] Invalid inference location '{inference}'. Must be 'local' or 'remote'.")
         raise typer.Exit(code=1)
     
-    if docling_config not in ["default", "vlm"]:
-        print(f"[red]Error:[/red] Invalid docling config '{docling_config}'. Must be 'default' or 'vlm'.")
+    if docling_config not in ["ocr", "vision"]:
+        print(f"[red]Error:[/red] Invalid docling config '{docling_config}'. Must be 'ocr' or 'vision'.")
         raise typer.Exit(code=1)
         
     if export_format not in ["csv", "cypher"]:
@@ -160,17 +165,18 @@ def convert_command(
         raise typer.Exit(code=1)
     
     # Validate VLM constraint (VLM only works locally for now)
-    if model_type == "vlm" and inference == "api":
+    if backend_type == "vlm" and inference == "remote":
         print(f"[red]Error:[/red] VLM (Vision-Language Model) is currently only supported with local inference.")
-        print("Please use '--inference local' or switch to '--model-type llm' for API inference.")
+        print("Please use '--inference local' or switch to '--backend_type llm' for API inference.")
         raise typer.Exit(code=1)
     
     # Display configuration
     print(f"Configuration:")
+    print(f"  Docling config:  [cyan]{docling_config}[/cyan]")
     print(f"  Processing mode: [cyan]{processing_mode}[/cyan]")
-    print(f"  Model type:      [cyan]{model_type}[/cyan]")
+    print(f"  Backend type:    [cyan]{backend_type}[/cyan]")
     print(f"  Inference:       [cyan]{inference}[/cyan]")
-    print(f"  Docling config: [cyan]{docling_config}[/cyan]")
+    print(f"  Reverse edges:   [cyan]{str(reverse_edges).lower()}[/cyan]")
     print(f"  Export format:   [cyan]{export_format}[/cyan]")
     
     # Bundle settings for the pipeline
@@ -178,11 +184,12 @@ def convert_command(
         "source": str(source),
         "template": template,
         "output_dir": str(output_dir),
-        "processing_mode": processing_mode,
-        "model_type": model_type,
-        "inference": inference,
-        "export_format": export_format,
         "docling_config": docling_config,
+        "processing_mode": processing_mode,
+        "backend_type": backend_type,
+        "inference": inference,
+        "reverse_edges": reverse_edges,
+        "export_format": export_format,
         "config": config_data,
         "model_override": model,
         "provider_override": provider

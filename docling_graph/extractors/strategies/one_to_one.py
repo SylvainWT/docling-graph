@@ -26,7 +26,7 @@ class OneToOneStrategy(BaseExtractor):
         """
         self.backend = backend
         self.doc_processor = DocumentProcessor(docling_config=docling_config)
-        print(f"[OneToOneStrategy] Initialized with backend: [cyan]{backend.__class__.__name__}[/cyan]")
+        print(f"[blue][OneToOneStrategy][/blue] Initialized with backend: [cyan]{backend.__class__.__name__}[/cyan]")
     
     def extract(self, source: str, template: Type[BaseModel]) -> List[BaseModel]:
         """
@@ -48,7 +48,7 @@ class OneToOneStrategy(BaseExtractor):
             
             extracted_models = []
             for page_num, page_md in enumerate(page_markdowns, 1):
-                print(f"[OneToOneStrategy] Processing page {page_num}/{len(page_markdowns)}")
+                print(f"[blue][OneToOneStrategy][/blue] Processing page {page_num}/{len(page_markdowns)}")
                 
                 model = self.backend.extract_from_markdown(
                     markdown=page_md,
@@ -59,7 +59,7 @@ class OneToOneStrategy(BaseExtractor):
                 if model:
                     extracted_models.append(model)
             
-            print(f"[OneToOneStrategy] Extracted {len(extracted_models)} model(s)")
+            print(f"[blue][OneToOneStrategy][/blue] Extracted {len(extracted_models)} model(s)")
             return extracted_models
         
         else:

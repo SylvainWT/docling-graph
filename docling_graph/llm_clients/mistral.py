@@ -1,10 +1,13 @@
-import os
 import json
-from typing import Dict, Any
+import os
+
 from mistralai import Mistral
-from rich import print
-from dotenv import load_dotenv
+from typing import Dict, Any
+
 from .base import BaseLlmClient
+from dotenv import load_dotenv
+from rich import print
+
 
 # Load environment variables from .env file
 load_dotenv()
@@ -20,10 +23,10 @@ class MistralClient(BaseLlmClient):
         
         self.client = Mistral(api_key=self.api_key)
         
-        # --- Context Limits (Approximate) ---
+        # --- Context Limits ---
         model_context_limits = {
             "mistral-large-latest": 32000,
-            "mistral-small-latest": 32000,
+            "mistral-small-latest": 32000
         }
         self._context_limit = model_context_limits.get(model, 32000)
         
@@ -31,12 +34,11 @@ class MistralClient(BaseLlmClient):
 
     def get_json_response(self, prompt: str, schema_json: str) -> Dict[str, Any]:
         """Executes the Mistral chat.complete call."""
-        # Use chat.complete() instead of chat()
         res = self.client.chat.complete(
             model=self.model,
             messages=[{"role": "user", "content": prompt}],
             response_format={"type": "json_object"},
-        )        
+        )  
         return json.loads(res.choices[0].message.content)
 
     @property

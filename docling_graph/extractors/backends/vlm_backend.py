@@ -3,19 +3,22 @@ VLM (Vision-Language Model) extraction backend.
 Handles document extraction using local VLM models via Docling.
 """
 
-from docling.datamodel.base_models import InputFormat
-from docling.document_extractor import DocumentExtractor, ExtractionFormatOption
-from docling.pipeline.extraction_vlm_pipeline import ExtractionVlmPipeline
-from docling.backend.pypdfium2_backend import PyPdfiumDocumentBackend
+import torch
+import gc
 
 from pydantic import BaseModel, ValidationError
 from typing import Type, List
 from rich import print
 
+from docling.document_extractor import DocumentExtractor, ExtractionFormatOption
+from docling.pipeline.extraction_vlm_pipeline import ExtractionVlmPipeline
+from docling.backend.pypdfium2_backend import PyPdfiumDocumentBackend
+from docling.datamodel.base_models import InputFormat
+
 
 class VlmBackend:
     """Backend for VLM-based extraction (local only)."""
-    
+
     def __init__(self, model_name: str):
         """
         Initialize VLM backend with specified model.
@@ -25,7 +28,7 @@ class VlmBackend:
         """
         self.model_name = model_name
         self._initialize_extractor()
-    
+
     def _initialize_extractor(self):
         """Initialize Docling's VLM extractor with custom settings."""
         try:
@@ -52,12 +55,13 @@ class VlmBackend:
                 allowed_formats=[InputFormat.IMAGE, InputFormat.PDF],
                 extraction_format_options=custom_format_options
             )
-            print(f"[VlmBackend] Initialized with model: [cyan]{self.model_name}[/cyan]")
+            
+            print(f"[blue][VlmBackend][/blue] Initialized with model: [cyan]{self.model_name}[/cyan]")
             
         except Exception as e:
             print(f"[red]Error initializing VLM backend:[/red] {e}")
             raise
-    
+
     def extract_from_document(self, source: str, template: Type[BaseModel]) -> List[BaseModel]:
         """
         Extract structured data from entire document using VLM.
@@ -65,12 +69,12 @@ class VlmBackend:
         Args:
             source (str): Path to source document.
             template (Type[BaseModel]): Pydantic model template.
-            
+        
         Returns:
             List[BaseModel]: List of extracted model instances (one per page/item).
         """
-        print(f"[VlmBackend] Extracting from: [yellow]{source}[/yellow]")
-
+        print(f"[blue][VlmBackend][/blue] Extracting from: [yellow]{source}[/yellow]")
+        
         try:
             # Extract using VLM
             extraction_result = self.doc_extractor.extract(
@@ -79,8 +83,7 @@ class VlmBackend:
             )
             
             extracted_objects = []
-        
-
+            
             # Process each page's extracted data
             if extraction_result.pages:
                 for page_num, page in enumerate(extraction_result.pages, 1):
@@ -89,23 +92,22 @@ class VlmBackend:
                             # Use model_validate for proper Pydantic validation
                             validated_model = template.model_validate(page.extracted_data)
                             extracted_objects.append(validated_model)
-                            
                         except ValidationError as e:
                             # Detailed error reporting like your original code
-                            print(f"[VlmBackend] [yellow]Validation Error on page {page_num}:[/yellow]")
+                            print(f"[blue][VlmBackend][/blue] [yellow]Validation Error on page {page_num}:[/yellow]")
                             print(f"  The data extracted by the VLM does not match your Pydantic template.")
                             print("[red]Details:[/red]")
                             for error in e.errors():
                                 loc = " -> ".join(map(str, error['loc']))
-                                print(f"    - [bold magenta]{loc}[/bold magenta]: [red]{error['msg']}[/red]")
+                                print(f"  - [bold magenta]{loc}[/bold magenta]: [red]{error['msg']}[/red]")
                             print(f"\n[yellow]Extracted Data (raw):[/yellow]\n{page.extracted_data}\n")
                             continue
             
             if extracted_objects:
-                print(f"[VlmBackend] Extracted [green]{len(extracted_objects)}[/green] valid items")
+                print(f"[blue][VlmBackend][/blue] Extracted [green]{len(extracted_objects)}[/green] valid items")
             else:
-                print(f"[VlmBackend] [yellow]Warning:[/yellow] No valid data extracted")
-                
+                print(f"[blue][VlmBackend][/blue] [yellow]Warning:[/yellow] No valid data extracted")
+            
             return extracted_objects
             
         except Exception as e:
@@ -113,3 +115,23 @@ class VlmBackend:
             import traceback
             traceback.print_exc()
             return []
+
+    def cleanup(self):
+        """Clean up GPU memory and release resources."""
+        try:
+            # Delete the extractor to release document objects
+            if hasattr(self, 'doc_extractor'):
+                del self.doc_extractor
+            
+            # Force garbage collection
+            gc.collect()
+            
+            # Clear CUDA cache if available
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+                torch.cuda.synchronize()
+            
+            print("[blue][VlmBackend][/blue] [green]Cleaned up resources and GPU memory[/green]")
+            
+        except Exception as e:
+            print(f"[blue][VlmBackend][/blue] [yellow]Warning during cleanup:[/yellow] {e}")

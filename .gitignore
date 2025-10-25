@@ -79,6 +79,7 @@ Thumbs.db
 # Project specific directories
 data/*
 !data/.gitkeep
-
 outputs/*
 !outputs/.gitkeep
+tempaltes/*
+!tempaltes/.gitkeep

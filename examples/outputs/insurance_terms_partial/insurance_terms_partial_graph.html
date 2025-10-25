@@ -1,0 +1,330 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script>function neighbourhoodHighlight(params) {
+  // console.log("in nieghbourhoodhighlight");
+  allNodes = nodes.get({ returnType: "Object" });
+  // originalNodes = JSON.parse(JSON.stringify(allNodes));
+  // if something is selected:
+  if (params.nodes.length > 0) {
+    highlightActive = true;
+    var i, j;
+    var selectedNode = params.nodes[0];
+    var degrees = 2;
+
+    // mark all nodes as hard to read.
+    for (let nodeId in allNodes) {
+      // nodeColors[nodeId] = allNodes[nodeId].color;
+      allNodes[nodeId].color = "rgba(200,200,200,0.5)";
+      if (allNodes[nodeId].hiddenLabel === undefined) {
+        allNodes[nodeId].hiddenLabel = allNodes[nodeId].label;
+        allNodes[nodeId].label = undefined;
+      }
+    }
+    var connectedNodes = network.getConnectedNodes(selectedNode);
+    var allConnectedNodes = [];
+
+    // get the second degree nodes
+    for (i = 1; i < degrees; i++) {
+      for (j = 0; j < connectedNodes.length; j++) {
+        allConnectedNodes = allConnectedNodes.concat(
+          network.getConnectedNodes(connectedNodes[j])
+        );
+      }
+    }
+
+    // all second degree nodes get a different color and their label back
+    for (i = 0; i < allConnectedNodes.length; i++) {
+      // allNodes[allConnectedNodes[i]].color = "pink";
+      allNodes[allConnectedNodes[i]].color = "rgba(150,150,150,0.75)";
+      if (allNodes[allConnectedNodes[i]].hiddenLabel !== undefined) {
+        allNodes[allConnectedNodes[i]].label =
+          allNodes[allConnectedNodes[i]].hiddenLabel;
+        allNodes[allConnectedNodes[i]].hiddenLabel = undefined;
+      }
+    }
+
+    // all first degree nodes get their own color and their label back
+    for (i = 0; i < connectedNodes.length; i++) {
+      // allNodes[connectedNodes[i]].color = undefined;
+      allNodes[connectedNodes[i]].color = nodeColors[connectedNodes[i]];
+      if (allNodes[connectedNodes[i]].hiddenLabel !== undefined) {
+        allNodes[connectedNodes[i]].label =
+          allNodes[connectedNodes[i]].hiddenLabel;
+        allNodes[connectedNodes[i]].hiddenLabel = undefined;
+      }
+    }
+
+    // the main node gets its own color and its label back.
+    // allNodes[selectedNode].color = undefined;
+    allNodes[selectedNode].color = nodeColors[selectedNode];
+    if (allNodes[selectedNode].hiddenLabel !== undefined) {
+      allNodes[selectedNode].label = allNodes[selectedNode].hiddenLabel;
+      allNodes[selectedNode].hiddenLabel = undefined;
+    }
+  } else if (highlightActive === true) {
+    // console.log("highlightActive was true");
+    // reset all nodes
+    for (let nodeId in allNodes) {
+      // allNodes[nodeId].color = "purple";
+      allNodes[nodeId].color = nodeColors[nodeId];
+      // delete allNodes[nodeId].color;
+      if (allNodes[nodeId].hiddenLabel !== undefined) {
+        allNodes[nodeId].label = allNodes[nodeId].hiddenLabel;
+        allNodes[nodeId].hiddenLabel = undefined;
+      }
+    }
+    highlightActive = false;
+  }
+
+  // transform the object into an array
+  var updateArray = [];
+  if (params.nodes.length > 0) {
+    for (let nodeId in allNodes) {
+      if (allNodes.hasOwnProperty(nodeId)) {
+        // console.log(allNodes[nodeId]);
+        updateArray.push(allNodes[nodeId]);
+      }
+    }
+    nodes.update(updateArray);
+  } else {
+    // console.log("Nothing was selected");
+    for (let nodeId in allNodes) {
+      if (allNodes.hasOwnProperty(nodeId)) {
+        // console.log(allNodes[nodeId]);
+        // allNodes[nodeId].color = {};
+        updateArray.push(allNodes[nodeId]);
+      }
+    }
+    nodes.update(updateArray);
+  }
+}
+
+function filterHighlight(params) {
+  allNodes = nodes.get({ returnType: "Object" });
+  // if something is selected:
+  if (params.nodes.length > 0) {
+    filterActive = true;
+    let selectedNodes = params.nodes;
+
+    // hiding all nodes and saving the label
+    for (let nodeId in allNodes) {
+      allNodes[nodeId].hidden = true;
+      if (allNodes[nodeId].savedLabel === undefined) {
+        allNodes[nodeId].savedLabel = allNodes[nodeId].label;
+        allNodes[nodeId].label = undefined;
+      }
+    }
+
+    for (let i=0; i < selectedNodes.length; i++) {
+      allNodes[selectedNodes[i]].hidden = false;
+      if (allNodes[selectedNodes[i]].savedLabel !== undefined) {
+        allNodes[selectedNodes[i]].label = allNodes[selectedNodes[i]].savedLabel;
+        allNodes[selectedNodes[i]].savedLabel = undefined;
+      }
+    }
+
+  } else if (filterActive === true) {
+    // reset all nodes
+    for (let nodeId in allNodes) {
+      allNodes[nodeId].hidden = false;
+      if (allNodes[nodeId].savedLabel !== undefined) {
+        allNodes[nodeId].label = allNodes[nodeId].savedLabel;
+        allNodes[nodeId].savedLabel = undefined;
+      }
+    }
+    filterActive = false;
+  }
+
+  // transform the object into an array
+  var updateArray = [];
+  if (params.nodes.length > 0) {
+    for (let nodeId in allNodes) {
+      if (allNodes.hasOwnProperty(nodeId)) {
+        updateArray.push(allNodes[nodeId]);
+      }
+    }
+    nodes.update(updateArray);
+  } else {
+    for (let nodeId in allNodes) {
+      if (allNodes.hasOwnProperty(nodeId)) {
+        updateArray.push(allNodes[nodeId]);
+      }
+    }
+    nodes.update(updateArray);
+  }
+}
+
+function selectNode(nodes) {
+  network.selectNodes(nodes);
+  neighbourhoodHighlight({ nodes: nodes });
+  return nodes;
+}
+
+function selectNodes(nodes) {
+  network.selectNodes(nodes);
+  filterHighlight({nodes: nodes});
+  return nodes;
+}
+
+function highlightFilter(filter) {
+  let selectedNodes = []
+  let selectedProp = filter['property']
+  if (filter['item'] === 'node') {
+    let allNodes = nodes.get({ returnType: "Object" });
+    for (let nodeId in allNodes) {
+      if (allNodes[nodeId][selectedProp] && filter['value'].includes((allNodes[nodeId][selectedProp]).toString())) {
+        selectedNodes.push(nodeId)
+      }
+    }
+  }
+  else if (filter['item'] === 'edge'){
+    let allEdges = edges.get({returnType: 'object'});
+    // check if the selected property exists for selected edge and select the nodes connected to the edge
+    for (let edge in allEdges) {
+      if (allEdges[edge][selectedProp] && filter['value'].includes((allEdges[edge][selectedProp]).toString())) {
+        selectedNodes.push(allEdges[edge]['from'])
+        selectedNodes.push(allEdges[edge]['to'])
+      }
+    }
+  }
+  selectNodes(selectedNodes)
+}</script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+            
+            
+            
+            
+            
+
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 100%;
+                 height: calc(100vh - 20px);
+                 background-color: #ffffff;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+            
+            <div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"borderWidth": 2, "borderWidthSelected": 4, "color": "#4A90E2", "font": {"color": "#2C3E50"}, "id": "InsuranceTerms_696b031073e7", "label": "InsuranceTerms", "shape": "dot", "title": "InsuranceTerms\n------------------------------\nDocument Reference: UNKNOWN\nProduct Name: Assurance Habitation\nIssuer: AXA France IARD\nDocument Type: Comparatif des formules\nTerritorial Scope: [\u0027France m\u00e9tropolitaine\u0027]\nCommon Exclusions: [\"Faute intentionnelle ou dolosive de l\u0027assur\u00e9\", \u0027Guerre ...\nClaims Procedure: D\u00e9claration sous 5 jours ouvr\u00e9s, 2 jours en cas de vol\nPrescription Period: 2 ans \u00e0 compter de l\u0027\u00e9v\u00e9nement\nCancellation Terms: R\u00e9siliation annuelle avec pr\u00e9avis de 2 mois"}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#4A90E2", "font": {"color": "#2C3E50"}, "id": "InsurancePlan_83b2b97326ea", "label": "InsurancePlan", "shape": "dot", "title": "InsurancePlan\n------------------------------\nName: Formule Essentielle\nDescription: Formule de base avec garanties essentielles\nAvailable Options: [\u0027Dommages \u00e9lectriques\u0027, \u0027R\u00e9\u00e9quipement \u00e0 neuf\u0027, \"D\u00e9pannag..."}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#4A90E2", "font": {"color": "#2C3E50"}, "id": "Guarantee_56f71907a592", "label": "Guarantee", "shape": "dot", "title": "Guarantee\n------------------------------\nName: D\u00e9g\u00e2ts des eaux"}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#4A90E2", "font": {"color": "#2C3E50"}, "id": "Guarantee_bdf21c00318d", "label": "Guarantee", "shape": "dot", "title": "Guarantee\n------------------------------\nName: Incendie et \u00e9v\u00e9nements assimil\u00e9s"}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#4A90E2", "font": {"color": "#2C3E50"}, "id": "Guarantee_845e59d360a1", "label": "Guarantee", "shape": "dot", "title": "Guarantee\n------------------------------\nName: \u00c9v\u00e9nements climatiques"}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#4A90E2", "font": {"color": "#2C3E50"}, "id": "Guarantee_ed3b24823928", "label": "Guarantee", "shape": "dot", "title": "Guarantee\n------------------------------\nName: Attentat"}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#4A90E2", "font": {"color": "#2C3E50"}, "id": "Guarantee_b2161845103e", "label": "Guarantee", "shape": "dot", "title": "Guarantee\n------------------------------\nName: Catastrophes naturelles et technologiques"}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#4A90E2", "font": {"color": "#2C3E50"}, "id": "Guarantee_7546c32638b6", "label": "Guarantee", "shape": "dot", "title": "Guarantee\n------------------------------\nName: Responsabilit\u00e9 civile"}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#4A90E2", "font": {"color": "#2C3E50"}, "id": "Guarantee_1741ec6ed69c", "label": "Guarantee", "shape": "dot", "title": "Guarantee\n------------------------------\nName: Assistance"}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#4A90E2", "font": {"color": "#2C3E50"}, "id": "InsurancePlan_3bc6b85bacd5", "label": "InsurancePlan", "shape": "dot", "title": "InsurancePlan\n------------------------------\nName: Formule Confort\nDescription: Couverture \u00e9tendue pour propri\u00e9taires occupants\nAvailable Options: [\u0027Dommages \u00e9lectriques\u0027, \u0027R\u00e9\u00e9quipement \u00e0 neuf\u0027, \"D\u00e9pannag..."}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#4A90E2", "font": {"color": "#2C3E50"}, "id": "Guarantee_9dd028187542", "label": "Guarantee", "shape": "dot", "title": "Guarantee\n------------------------------\nName: Bris de vitre"}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#4A90E2", "font": {"color": "#2C3E50"}, "id": "Guarantee_dd96508880e4", "label": "Guarantee", "shape": "dot", "title": "Guarantee\n------------------------------\nName: Vol et vandalisme"}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#4A90E2", "font": {"color": "#2C3E50"}, "id": "InsurancePlan_10bf85b8f6a2", "label": "InsurancePlan", "shape": "dot", "title": "InsurancePlan\n------------------------------\nName: Formule Confort Plus\nDescription: Protection maximale incluant objets de valeur\nAvailable Options: [\u0027Dommages \u00e9lectriques\u0027, \u0027R\u00e9\u00e9quipement \u00e0 neuf\u0027, \"D\u00e9pannag..."}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#4A90E2", "font": {"color": "#2C3E50"}, "id": "Guarantee_0cee91f19218", "label": "Guarantee", "shape": "dot", "title": "Guarantee\n------------------------------\nName: Vol et casse des objets de loisir"}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#4A90E2", "font": {"color": "#2C3E50"}, "id": "InsurancePlan_691398387dc8", "label": "InsurancePlan", "shape": "dot", "title": "InsurancePlan\n------------------------------\nName: Formule Propri\u00e9taire Non Occupant"}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#4A90E2", "font": {"color": "#2C3E50"}, "id": "Guarantee_e23a82cdf5eb", "label": "Guarantee", "shape": "dot", "title": "Guarantee\n------------------------------\nName: D\u00e9fense P\u00e9nale et Recours"}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#4A90E2", "font": {"color": "#2C3E50"}, "id": "Guarantee_f0f33e3260eb", "label": "Guarantee", "shape": "dot", "title": "Guarantee\n------------------------------\nName: Vol et Vandalisme"}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#4A90E2", "font": {"color": "#2C3E50"}, "id": "Guarantee_ba29e27739df", "label": "Guarantee", "shape": "dot", "title": "Guarantee\n------------------------------\nName: Dommages \u00e9lectriques"}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#4A90E2", "font": {"color": "#2C3E50"}, "id": "Guarantee_23baaeb8f69a", "label": "Guarantee", "shape": "dot", "title": "Guarantee\n------------------------------\nName: Protection du mobilier"}]);
+                  edges = new vis.DataSet([{"arrows": "to", "color": "#B35045", "from": "InsuranceTerms_696b031073e7", "label": "available_plans", "title": "available_plans", "to": "InsurancePlan_83b2b97326ea"}, {"arrows": "to", "color": "#B35045", "from": "InsuranceTerms_696b031073e7", "label": "available_plans", "title": "available_plans", "to": "InsurancePlan_3bc6b85bacd5"}, {"arrows": "to", "color": "#B35045", "from": "InsuranceTerms_696b031073e7", "label": "available_plans", "title": "available_plans", "to": "InsurancePlan_10bf85b8f6a2"}, {"arrows": "to", "color": "#B35045", "from": "InsuranceTerms_696b031073e7", "label": "available_plans", "title": "available_plans", "to": "InsurancePlan_691398387dc8"}, {"arrows": "to", "color": "#B35045", "from": "InsurancePlan_83b2b97326ea", "label": "guarantees", "title": "guarantees", "to": "Guarantee_56f71907a592"}, {"arrows": "to", "color": "#B35045", "from": "InsurancePlan_83b2b97326ea", "label": "guarantees", "title": "guarantees", "to": "Guarantee_bdf21c00318d"}, {"arrows": "to", "color": "#B35045", "from": "InsurancePlan_83b2b97326ea", "label": "guarantees", "title": "guarantees", "to": "Guarantee_845e59d360a1"}, {"arrows": "to", "color": "#B35045", "from": "InsurancePlan_83b2b97326ea", "label": "guarantees", "title": "guarantees", "to": "Guarantee_ed3b24823928"}, {"arrows": "to", "color": "#B35045", "from": "InsurancePlan_83b2b97326ea", "label": "guarantees", "title": "guarantees", "to": "Guarantee_b2161845103e"}, {"arrows": "to", "color": "#B35045", "from": "InsurancePlan_83b2b97326ea", "label": "guarantees", "title": "guarantees", "to": "Guarantee_7546c32638b6"}, {"arrows": "to", "color": "#B35045", "from": "InsurancePlan_83b2b97326ea", "label": "guarantees", "title": "guarantees", "to": "Guarantee_1741ec6ed69c"}, {"arrows": "to", "color": "#B35045", "from": "InsurancePlan_3bc6b85bacd5", "label": "guarantees", "title": "guarantees", "to": "Guarantee_56f71907a592"}, {"arrows": "to", "color": "#B35045", "from": "InsurancePlan_3bc6b85bacd5", "label": "guarantees", "title": "guarantees", "to": "Guarantee_bdf21c00318d"}, {"arrows": "to", "color": "#B35045", "from": "InsurancePlan_3bc6b85bacd5", "label": "guarantees", "title": "guarantees", "to": "Guarantee_845e59d360a1"}, {"arrows": "to", "color": "#B35045", "from": "InsurancePlan_3bc6b85bacd5", "label": "guarantees", "title": "guarantees", "to": "Guarantee_ed3b24823928"}, {"arrows": "to", "color": "#B35045", "from": "InsurancePlan_3bc6b85bacd5", "label": "guarantees", "title": "guarantees", "to": "Guarantee_b2161845103e"}, {"arrows": "to", "color": "#B35045", "from": "InsurancePlan_3bc6b85bacd5", "label": "guarantees", "title": "guarantees", "to": "Guarantee_7546c32638b6"}, {"arrows": "to", "color": "#B35045", "from": "InsurancePlan_3bc6b85bacd5", "label": "guarantees", "title": "guarantees", "to": "Guarantee_1741ec6ed69c"}, {"arrows": "to", "color": "#B35045", "from": "InsurancePlan_3bc6b85bacd5", "label": "guarantees", "title": "guarantees", "to": "Guarantee_9dd028187542"}, {"arrows": "to", "color": "#B35045", "from": "InsurancePlan_3bc6b85bacd5", "label": "guarantees", "title": "guarantees", "to": "Guarantee_dd96508880e4"}, {"arrows": "to", "color": "#B35045", "from": "InsurancePlan_10bf85b8f6a2", "label": "guarantees", "title": "guarantees", "to": "Guarantee_56f71907a592"}, {"arrows": "to", "color": "#B35045", "from": "InsurancePlan_10bf85b8f6a2", "label": "guarantees", "title": "guarantees", "to": "Guarantee_bdf21c00318d"}, {"arrows": "to", "color": "#B35045", "from": "InsurancePlan_10bf85b8f6a2", "label": "guarantees", "title": "guarantees", "to": "Guarantee_845e59d360a1"}, {"arrows": "to", "color": "#B35045", "from": "InsurancePlan_10bf85b8f6a2", "label": "guarantees", "title": "guarantees", "to": "Guarantee_ed3b24823928"}, {"arrows": "to", "color": "#B35045", "from": "InsurancePlan_10bf85b8f6a2", "label": "guarantees", "title": "guarantees", "to": "Guarantee_b2161845103e"}, {"arrows": "to", "color": "#B35045", "from": "InsurancePlan_10bf85b8f6a2", "label": "guarantees", "title": "guarantees", "to": "Guarantee_7546c32638b6"}, {"arrows": "to", "color": "#B35045", "from": "InsurancePlan_10bf85b8f6a2", "label": "guarantees", "title": "guarantees", "to": "Guarantee_1741ec6ed69c"}, {"arrows": "to", "color": "#B35045", "from": "InsurancePlan_10bf85b8f6a2", "label": "guarantees", "title": "guarantees", "to": "Guarantee_9dd028187542"}, {"arrows": "to", "color": "#B35045", "from": "InsurancePlan_10bf85b8f6a2", "label": "guarantees", "title": "guarantees", "to": "Guarantee_dd96508880e4"}, {"arrows": "to", "color": "#B35045", "from": "InsurancePlan_10bf85b8f6a2", "label": "guarantees", "title": "guarantees", "to": "Guarantee_0cee91f19218"}, {"arrows": "to", "color": "#B35045", "from": "InsurancePlan_691398387dc8", "label": "guarantees", "title": "guarantees", "to": "Guarantee_56f71907a592"}, {"arrows": "to", "color": "#B35045", "from": "InsurancePlan_691398387dc8", "label": "guarantees", "title": "guarantees", "to": "Guarantee_bdf21c00318d"}, {"arrows": "to", "color": "#B35045", "from": "InsurancePlan_691398387dc8", "label": "guarantees", "title": "guarantees", "to": "Guarantee_845e59d360a1"}, {"arrows": "to", "color": "#B35045", "from": "InsurancePlan_691398387dc8", "label": "guarantees", "title": "guarantees", "to": "Guarantee_ed3b24823928"}, {"arrows": "to", "color": "#B35045", "from": "InsurancePlan_691398387dc8", "label": "guarantees", "title": "guarantees", "to": "Guarantee_b2161845103e"}, {"arrows": "to", "color": "#B35045", "from": "InsurancePlan_691398387dc8", "label": "guarantees", "title": "guarantees", "to": "Guarantee_e23a82cdf5eb"}, {"arrows": "to", "color": "#B35045", "from": "InsurancePlan_691398387dc8", "label": "guarantees", "title": "guarantees", "to": "Guarantee_1741ec6ed69c"}, {"arrows": "to", "color": "#B35045", "from": "InsurancePlan_691398387dc8", "label": "guarantees", "title": "guarantees", "to": "Guarantee_9dd028187542"}, {"arrows": "to", "color": "#B35045", "from": "InsurancePlan_691398387dc8", "label": "guarantees", "title": "guarantees", "to": "Guarantee_f0f33e3260eb"}, {"arrows": "to", "color": "#B35045", "from": "InsurancePlan_691398387dc8", "label": "guarantees", "title": "guarantees", "to": "Guarantee_ba29e27739df"}, {"arrows": "to", "color": "#B35045", "from": "InsurancePlan_691398387dc8", "label": "guarantees", "title": "guarantees", "to": "Guarantee_23baaeb8f69a"}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {"physics": {"forceAtlas2Based": {"gravitationalConstant": -50, "centralGravity": 0.01, "springLength": 200, "springConstant": 0.08}, "maxVelocity": 50, "solver": "forceAtlas2Based", "timestep": 0.35, "stabilization": {"enabled": true, "iterations": 150}}, "nodes": {"shape": "dot", "size": 25, "font": {"size": 16, "face": "arial"}, "borderWidth": 2}, "edges": {"width": 2, "arrows": {"to": {"enabled": true, "scaleFactor": 1}}, "smooth": {"type": "continuous"}}, "interaction": {"hover": true, "tooltipDelay": 100, "navigationButtons": true, "keyboard": true, "dragNodes": true}};
+
+                  
+
+
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+
+                  
+
+
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    
+    <script type="text/javascript">
+        // Disable physics after the network stabilizes
+        network.once("stabilizationIterationsDone", function() {
+            network.setOptions({ physics: false });
+            console.log("Physics disabled - nodes will stay where you drag them");
+        });
+    </script>
+    
+</body>
+</html>
