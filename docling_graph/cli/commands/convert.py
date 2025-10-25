@@ -22,13 +22,7 @@ from ..validators import (
     validate_vlm_constraints
 )
 
-
-# Import pipeline (needs to be relative to original structure)
-try:
-    from ...pipeline import run_pipeline
-except ImportError:
-    # Fallback for development
-    from pipeline import run_pipeline
+from docling_graph.pipeline import run_pipeline
 
 
 def convert_command(
