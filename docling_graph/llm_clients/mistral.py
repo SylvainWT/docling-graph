@@ -93,8 +93,6 @@ class MistralClient(BaseLlmClient):
                 "content": prompt,
             })
 
-        # Debug: Show what we're sending
-        print(f"[DEBUG] Sending {len(messages)} message(s) to Mistral")
         for i, msg in enumerate(messages):
             content_preview = msg["content"][:100] if msg["content"] else "EMPTY"
             print(f"  Message {i+1} ({msg['role']}): {content_preview}...")

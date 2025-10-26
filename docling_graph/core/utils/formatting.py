@@ -4,47 +4,46 @@ from typing import Any
 import re
 
 
-def format_property_key(key: str) -> str:
-    """Convert snake_case or camelCase to Title Case.
+def format_property_value(value: Any, max_length: int = 80) -> str:
+    """
+    Format property value with smart truncation and list handling.
 
     Args:
-        key: Property key to format.
+        value: The value to format (can be str, list, dict, etc.)
+        max_length: Maximum length before truncation
 
     Returns:
-        Formatted property key in Title Case.
+        Formatted string representation
+    """
+    # Handle lists - display as Python list notation
+    if isinstance(value, list):
+        return str(value)
 
-    Examples:
-        >>> format_property_key("user_name")
-        'User Name'
-        >>> format_property_key("userName")
-        'User Name'
+    # Handle other types
+    str_val = str(value)
+    if len(str_val) <= max_length:
+        return str_val
+
+    return str_val[:max_length-3] + "..."
+
+
+def format_property_key(key: str) -> str:
+    """
+    Convert snake_case or camelCase to Title Case.
+
+    Args:
+        key: Property key to format
+
+    Returns:
+        Title-cased string
     """
     # Handle snake_case
     if '_' in key:
         return ' '.join(word.capitalize() for word in key.split('_'))
 
     # Handle camelCase
+    import re
     return re.sub(r'([A-Z])', r' \1', key).strip().title()
-
-
-def format_property_value(value: Any, max_length: int = 80) -> str:
-    """Format property value with smart truncation.
-
-    Args:
-        value: Value to format.
-        max_length: Maximum string length before truncation.
-
-    Returns:
-        Formatted and possibly truncated string.
-
-    Examples:
-        >>> format_property_value("Short text", 100)
-        'Short text'
-        >>> format_property_value("Very long text" * 10, 20)
-        'Very long textVer...'
-    """
-    str_val = str(value)
-    return truncate_string(str_val, max_length)
 
 
 def truncate_string(text: str, max_length: int, suffix: str = "...") -> str:

@@ -266,10 +266,10 @@ def run_pipeline(config: Dict[str, Any]) -> None:
             exporter.export(knowledge_graph, json_path)
             print(f"[green]->[/green] Saved JSON to [green]{json_path}[/green]")
 
-        # 8. Generate visualizations using visualizers
+        # 8. Generate visualizations
         print(f"[green]->[/green] Generating visualizations...")
 
-        # Markdown report using NEW ReportGenerator
+        # Markdown report
         report_generator = ReportGenerator()
         report_generator.visualize(
             knowledge_graph,
@@ -278,12 +278,12 @@ def run_pipeline(config: Dict[str, Any]) -> None:
         )
         print(f"[green]->[/green] Generated markdown report")
 
-        # Interactive visualization using NEW InteractiveVisualizer
+        # Interactive visualization
         interactive_viz = InteractiveVisualizer()
         interactive_viz.visualize(knowledge_graph, output_path)
         print(f"[green]->[/green] Generated interactive HTML visualization")
 
-        # Static visualizations using NEW StaticVisualizer
+        # Static visualizations
         static_viz = StaticVisualizer()
 
         # Generate PNG
