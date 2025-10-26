@@ -5,9 +5,9 @@ This module handles conversion of Pydantic models to NetworkX graphs,
 and provides export and visualization capabilities.
 """
 
-from .common.converter import GraphConverter
-from .common.config import GraphConfig, VisualizationConfig, ExportConfig
-from .common.models import Edge, GraphMetadata
+from .base.converter import GraphConverter
+from .base.config import GraphConfig, VisualizationConfig, ExportConfig
+from .base.models import Edge, GraphMetadata
 from .exporters.csv_exporter import CSVExporter
 from .exporters.cypher_exporter import CypherExporter
 from .exporters.json_exporter import JSONExporter

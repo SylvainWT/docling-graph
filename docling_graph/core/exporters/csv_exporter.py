@@ -4,7 +4,7 @@ from pathlib import Path
 import networkx as nx
 import pandas as pd
 
-from ..common.config import ExportConfig
+from ..base.config import ExportConfig
 from typing import Optional
 
 

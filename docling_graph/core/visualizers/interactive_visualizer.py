@@ -6,7 +6,7 @@ from pathlib import Path
 import networkx as nx
 
 from ..utils.formatting import format_property_key, format_property_value
-from ..common.config import VisualizationConfig
+from ..base.config import VisualizationConfig
 
 
 class InteractiveVisualizer:

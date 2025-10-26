@@ -1,6 +1,6 @@
 """Graph statistics and analysis utilities."""
 
-from ..common.models import GraphMetadata
+from ..base.models import GraphMetadata
 from typing import Dict
 import networkx as nx
 

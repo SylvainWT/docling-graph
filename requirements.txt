@@ -27,5 +27,6 @@ vllm
 ### API Providers ###
 ibm-watson-machine-learning
 mistralai
+google-genai
 google
 openai

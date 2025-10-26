@@ -3,7 +3,7 @@
 import networkx as nx
 import re
 
-from ..common.config import ExportConfig
+from ..base.config import ExportConfig
 from typing import Any, Optional, Dict
 from pathlib import Path
 
