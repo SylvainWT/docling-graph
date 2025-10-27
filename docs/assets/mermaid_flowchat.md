@@ -1,23 +1,22 @@
 ---
 config:
-  theme: redux
+  theme: redux-dark
   layout: elk
-  look: classic
-  elk: {}
+  look: neo
 ---
 flowchart TD
     A(["Source Document"]) --> n4["Docling Graph Pipeline"]
     n2(["Config"]) --> n4
     n3(["Pydantic Template"]) --> n4
     n4 --> n5["Extraction Factory"]
-    n5 --> n6["Docling Pipeline"]
+    n5 --> n6["Docling Pipeline"] & n16(["Prompt"])
     n6 --> n7["OCR"] & n8["Vision"] & n25["Extract"]
     n8 --> n9["Markdown Processor"]
     n7 --> n9
     n10["Conversion Strategy"] --> n11["One To One"] & n12["Many To One"]
     n13["Extraction Backend"] --> n14["LLM"] & n15["VLM"]
     n9 --> n13
-    n16(["Prompt"]) --> n13
+    n16 --> n13
     n15 --> n17(["Extracted Content"])
     n14 --> n17
     n17 --> n10
@@ -27,14 +26,13 @@ flowchart TD
     n20 --> n21["Graph Converter"]
     n21 --> n22(["Knowledge Graph"])
     n22 --> n23["Exporter"] & n24["Visualizer"]
-    n25 --> n10
     n23 --> n29(["CSV"]) & n30(["Cypher"]) & n31(["JSON"]) & n33["Knowledge Base"]
     n24 --> n28(["Images"]) & n27(["HTML"]) & n26(["Markdown"])
     n30 --> n34["Batch Loader"]
     n31 --> n34
     n29 --> n34
     n34 --> n33
-    n5 --> n16
+    n25 --> n20
     n4@{ shape: procs}
     n5@{ shape: tag-proc}
     n6@{ shape: procs}
@@ -60,6 +58,7 @@ flowchart TD
      n3:::input
      n5:::operator
      n6:::process
+     n16:::config
      n7:::process
      n8:::process
      n25:::process
@@ -70,7 +69,6 @@ flowchart TD
      n13:::process
      n14:::process
      n15:::process
-     n16:::config
      n17:::output
      n18:::operator
      n20:::output
