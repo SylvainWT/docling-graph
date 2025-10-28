@@ -1,6 +1,6 @@
 <p align="center"><br>
   <a href="https://github.com/ayoub-ibm/docling-graph">
-    <img loading="lazy" alt="Docling Graph" src="docs/assets/logo.png" width="250"/>
+    <img loading="lazy" alt="Docling Graph" src="docs/assets/logo.png" width="300"/>
   </a>
 </p>
 
@@ -62,7 +62,7 @@ Docling Graph provides an automated pipeline that transforms unstructured docume
 
 It integrates `document conversion`, data `extraction via LLMs & VLMs`, `schema validation`, and `graph construction`, enabling flexible export and interactive visualization of complex document relationships.
 
-<p align="center">
+<p align="center"><br>
   <img src="docs/assets/docling_graph_workflow.png" alt="Docling Graph Workflow" width="550">
 </p>
 
