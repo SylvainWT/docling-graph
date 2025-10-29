@@ -176,7 +176,7 @@ class TestGraphMetadata:
             "edge_count": 30,
             "node_types": {"A": 10, "B": 10},
             "edge_types": {"rel": 30},
-            "source_models": 10,  # Changed from input_model_count
+            "source_models": 10,
             "average_degree": 3.5
         }
         metadata = GraphMetadata(**metadata_dict)

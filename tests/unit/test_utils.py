@@ -27,7 +27,7 @@ class TestMergePydanticModels:
 
         # Empty list should return None
         merged = merge_pydantic_models([], Person)
-        assert merged is None  # CHANGED: Expect None instead of instance
+        assert merged is None
 
     def test_merge_single_model(self):
         """Test merging single model."""
