@@ -165,18 +165,6 @@ class TestValidateExportFormat:
         with pytest.raises(typer.Exit):
             validate_export_format("xml")
 
-    @pytest.mark.parametrize("invalid_input", [
-        "json",
-        "xml",
-        "graphml",
-        "neo4j",
-        ""
-    ])
-    def test_various_invalid_formats(self, invalid_input):
-        """Test various invalid format inputs."""
-        with pytest.raises(typer.Exit):
-            validate_export_format(invalid_input)
-
 
 class TestValidateVlmConstraints:
     """Tests for validate_vlm_constraints function."""

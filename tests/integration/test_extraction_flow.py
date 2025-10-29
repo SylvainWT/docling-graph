@@ -21,7 +21,7 @@ class TestOneToOneStrategy:
         assert strategy is not None
         assert strategy.backend == mock_llm_client
 
-    @patch("docling_graph.extractors.strategies.one_to_one.DocumentProcessor")
+    @patch("docling_graph.core.extractors.strategies.one_to_one.DocumentProcessor")
     def test_one_to_one_extract_returns_list(
         self,
         mock_doc_processor,
@@ -29,7 +29,7 @@ class TestOneToOneStrategy:
         temp_dir
     ):
         """Test that one-to-one extract returns list of models."""
-        from conftest import Person
+        from ..conftest import Person
 
         # Mock document processor
         mock_processor = Mock()
@@ -60,9 +60,9 @@ class TestOneToOneStrategy:
 
     def test_one_to_one_processes_each_page(self, mock_llm_client, temp_dir):
         """Test that one-to-one processes each page independently."""
-        from conftest import Person
+        from ..conftest import Person
 
-        with patch("docling_graph.extractors.strategies.one_to_one.DocumentProcessor") as mock_dp:
+        with patch("docling_graph.core.extractors.strategies.one_to_one.DocumentProcessor") as mock_dp:
             # Mock 3 pages
             mock_processor = Mock()
             mock_processor.process_document.return_value = ["page1", "page2", "page3"]
@@ -105,7 +105,7 @@ class TestManyToOneStrategy:
         assert strategy is not None
         assert strategy.backend == mock_llm_client
 
-    @patch("docling_graph.extractors.strategies.many_to_one.DocumentProcessor")
+    @patch("docling_graph.core.extractors.strategies.many_to_one.DocumentProcessor")
     def test_many_to_one_extract_returns_list(
         self,
         mock_doc_processor,
@@ -113,7 +113,7 @@ class TestManyToOneStrategy:
         temp_dir
     ):
         """Test that many-to-one extract returns list with single model."""
-        from conftest import Person
+        from ..conftest import Person
 
         # Mock document processor
         mock_processor = Mock()
@@ -139,9 +139,9 @@ class TestManyToOneStrategy:
 
     def test_many_to_one_consolidates_pages(self, mock_llm_client, temp_dir):
         """Test that many-to-one consolidates multiple pages."""
-        from conftest import Person
+        from ..conftest import Person
 
-        with patch("docling_graph.extractors.strategies.many_to_one.DocumentProcessor") as mock_dp:
+        with patch("docling_graph.core.extractors.strategies.many_to_one.DocumentProcessor") as mock_dp:
             # Mock multiple pages
             mock_processor = Mock()
             mock_processor.process_document.return_value = ["page1", "page2", "page3"]
@@ -175,8 +175,8 @@ class TestExtractionComparison:
 
         assert one_to_one.backend == many_to_one.backend
 
-    @patch("docling_graph.extractors.strategies.one_to_one.DocumentProcessor")
-    @patch("docling_graph.extractors.strategies.many_to_one.DocumentProcessor")
+    @patch("docling_graph.core.extractors.strategies.one_to_one.DocumentProcessor")
+    @patch("docling_graph.core.extractors.strategies.many_to_one.DocumentProcessor")
     def test_strategies_produce_different_results(
         self,
         mock_dp_many,
@@ -185,7 +185,7 @@ class TestExtractionComparison:
         temp_dir
     ):
         """Test that strategies produce different number of results."""
-        from conftest import Person
+        from ..conftest import Person
 
         # Setup mocks for both strategies
         mock_proc_one = Mock()
@@ -235,7 +235,7 @@ class TestExtractionErrorHandling:
 
     def test_extraction_handles_missing_file(self, temp_dir):
         """Test extraction handles missing source file."""
-        from conftest import Person
+        from ..conftest import Person
         
         # Create a mock that simulates file validation
         mock_backend = Mock()
@@ -255,14 +255,14 @@ class TestExtractionErrorHandling:
 
     def test_extraction_handles_backend_error(self, temp_dir):
         """Test extraction handles backend errors."""
-        from conftest import Person
+        from ..conftest import Person
 
         # Mock backend that raises error
         mock_backend = Mock()
         mock_backend.extract_from_document.side_effect = Exception("Backend error")
         mock_backend.extract.side_effect = Exception("Backend error")
 
-        with patch("docling_graph.extractors.strategies.one_to_one.DocumentProcessor"):
+        with patch("docling_graph.core.extractors.strategies.one_to_one.DocumentProcessor"):
             strategy = OneToOneStrategy(backend=mock_backend)
 
             test_doc = temp_dir / "test.pdf"
@@ -289,7 +289,7 @@ class TestExtractionWithDifferentBackends:
 
     def test_extraction_with_llm_backend(self, temp_dir):
         """Test extraction with LLM backend."""
-        from conftest import Person
+        from ..conftest import Person
 
         mock_llm = Mock()
         mock_llm.extract.return_value = {
@@ -298,7 +298,7 @@ class TestExtractionWithDifferentBackends:
             "email": "test@example.com"
         }
 
-        with patch("docling_graph.extractors.strategies.one_to_one.DocumentProcessor"):
+        with patch("docling_graph.core.extractors.strategies.one_to_one.DocumentProcessor"):
             strategy = OneToOneStrategy(backend=mock_llm)
 
             test_doc = temp_dir / "test.pdf"
@@ -309,7 +309,7 @@ class TestExtractionWithDifferentBackends:
 
     def test_extraction_with_vlm_backend(self, temp_dir):
         """Test extraction with VLM backend."""
-        from conftest import Person
+        from ..conftest import Person
 
         mock_vlm = Mock()
         mock_vlm.extract.return_value = [{
@@ -318,7 +318,7 @@ class TestExtractionWithDifferentBackends:
             "email": "test@example.com"
         }]
 
-        with patch("docling_graph.extractors.strategies.one_to_one.DocumentProcessor"):
+        with patch("docling_graph.core.extractors.strategies.one_to_one.DocumentProcessor"):
             strategy = OneToOneStrategy(backend=mock_vlm)
 
             test_doc = temp_dir / "test.pdf"
@@ -335,9 +335,9 @@ class TestExtractionPerformance:
 
     def test_extraction_processes_multipage_document(self, mock_llm_client, temp_dir):
         """Test extraction can handle multi-page documents."""
-        from conftest import Person
+        from ..conftest import Person
 
-        with patch("docling_graph.extractors.strategies.one_to_one.DocumentProcessor") as mock_dp:
+        with patch("docling_graph.core.extractors.strategies.one_to_one.DocumentProcessor") as mock_dp:
             # Mock 100 pages
             mock_processor = Mock()
             mock_processor.process_document.return_value = [f"page_{i}" for i in range(100)]
@@ -364,9 +364,9 @@ class TestExtractionPerformance:
 
     def test_extraction_cleans_up_resources(self, mock_llm_client, temp_dir):
         """Test that extraction cleans up document processor."""
-        from conftest import Person
+        from ..conftest import Person
 
-        with patch("docling_graph.extractors.strategies.one_to_one.DocumentProcessor") as mock_dp:
+        with patch("docling_graph.core.extractors.strategies.one_to_one.DocumentProcessor") as mock_dp:
             mock_processor = Mock()
             mock_processor.process_document.return_value = ["page"]
             mock_processor.cleanup = Mock()

@@ -2,15 +2,15 @@
 Pytest configuration and shared fixtures.
 """
 
-import pytest
 import tempfile
+import pytest
 import shutil
 
-from pathlib import Path
-from typing import Dict, Any, Generator
 from unittest.mock import Mock, MagicMock
-import networkx as nx
+from typing import Dict, Any, Generator
 from pydantic import BaseModel, Field
+from pathlib import Path
+import networkx as nx
 
 
 # ============================================================================

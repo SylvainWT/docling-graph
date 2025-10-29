@@ -106,7 +106,7 @@ class TestGraphConverterNodeGeneration:
 
     def test_duplicate_models_create_single_node(self):
         """Test that duplicate models create only one node."""
-        from conftest import Person
+        from ..conftest import Person
 
         person1 = Person(name="Alice", age=25, email="alice@example.com")
         person2 = Person(name="Alice", age=25, email="alice@example.com")
@@ -181,7 +181,7 @@ class TestGraphConverterThreadSafety:
 
     def test_no_shared_state_between_conversions(self):
         """Test that conversions don't share state."""
-        from conftest import Person
+        from ..conftest import Person
 
         converter = GraphConverter()
 
@@ -205,7 +205,7 @@ class TestGraphConverterValueSerialization:
 
     def test_serialize_string_values(self):
         """Test serialization of string values."""
-        from conftest import Person
+        from ..conftest import Person
 
         person = Person(name="John", age=30, email="john@example.com")
         converter = GraphConverter()
@@ -216,7 +216,7 @@ class TestGraphConverterValueSerialization:
 
     def test_serialize_long_strings_truncated(self):
         """Test that long strings are truncated."""
-        from conftest import Person
+        from ..conftest import Person
 
         long_name = "A" * 2000  # Very long name
         person = Person(name=long_name, age=30, email="test@example.com")
@@ -233,7 +233,7 @@ class TestGraphConverterValueSerialization:
 
     def test_serialize_numeric_values(self):
         """Test serialization of numeric values."""
-        from conftest import Person
+        from ..conftest import Person
 
         person = Person(name="John", age=30, email="john@example.com")
         converter = GraphConverter()
@@ -249,7 +249,7 @@ class TestGraphConverterNodeIDGeneration:
 
     def test_node_id_uses_graph_id_fields(self):
         """Test that node IDs use graph_id_fields when available."""
-        from conftest import Person
+        from ..conftest import Person
 
         person = Person(name="Alice", age=25, email="alice@example.com")
         converter = GraphConverter()
@@ -262,7 +262,7 @@ class TestGraphConverterNodeIDGeneration:
 
     def test_node_id_hash_based_when_no_fields(self):
         """Test hash-based ID when graph_id_fields not set."""
-        from conftest import Address
+        from ..conftest import Address
 
         address = Address(street="123 Main", city="NYC", country="USA")
         converter = GraphConverter()
@@ -298,7 +298,7 @@ class TestGraphConverterEdgeCases:
 
     def test_model_with_none_values(self):
         """Test handling of None values in model."""
-        from conftest import Company
+        from ..conftest import Company
 
         company = Company(name="NullCorp", employees=[], address=None)
         converter = GraphConverter()
@@ -309,7 +309,7 @@ class TestGraphConverterEdgeCases:
 
     def test_model_with_empty_lists(self):
         """Test handling of empty lists."""
-        from conftest import Company
+        from ..conftest import Company
 
         company = Company(name="EmptyCorp", employees=[])
         converter = GraphConverter()
@@ -322,7 +322,7 @@ class TestGraphConverterEdgeCases:
         """Test that cyclic relationships are handled properly."""
         # This would require a model with cyclic references
         # For now, just test that the converter doesn't crash
-        from conftest import Person
+        from ..conftest import Person
 
         person = Person(name="Alice", age=25, email="alice@example.com")
         converter = GraphConverter()
