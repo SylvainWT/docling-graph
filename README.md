@@ -424,38 +424,36 @@ vlm:
 
 
 
-## Next Steps
+## Roadmap & R&D Directions
+
+This section outlines the upcoming priorities and development directions for the project, organized by timeline and focus area.
 
 ### 1. Immediate Priorities
 
-- **High**: Set up continuous integration and deployment pipelines via GitHub Actions
-- **High**: Expand test coverage to the entire codebase
-- **Medium**: Add input validation and security measures (file paths validation, model size limit, recursion depth limit, rate limiting)
-- **Medium**: Performance optimizations (caching, async, batching)
+- **[High] CI/CD Integration:** Set up continuous integration and deployment pipelines using `GitHub Actions`.
+- **[High] Test Coverage Expansion:** Extend unit and integration tests across the entire codebase.
+- **[Medium] Security & Validation Enhancements:** Add robust input validation (file paths, recursion depth, model size limits, rate limiting).
+- **[Medium] Performance Improvements:** Implement caching, asynchronous processing, and batch operations for faster inference.
+
 
 ### 2. Upcoming Features
 
-- **Expanded LLM Provider Support**: Add compatibility for `WatsonX` and `vLLM`
-- **Expanded Input Modalities**: Support for text or `DoclingDocument` direct input
-- **Graph Database Connectivity**: Direct loading into Neo4j, ArangoDB, etc.
-- **`docling-graph query` Command**: Query generated graphs via CLI (e.g., with LangChain)
-- **Flexible Component Instantiation**: User-defined components and easy customization
-- **Interactive Template Generation**: Guided creation of Pydantic templates
-- **Optimized Batch Processing**: Improved GPU-based local inference batching
-- **Markdown Output Storage**: Persist and reuse Docling converter outputs
+* **Multi-LLM Support** — Extend provider compatibility to include `WatsonX`, `vLLM`, and other clients.
+* **Flexible Input Modalities** — Support `text`, `markdown`, and direct `DoclingDocument` inputs.
+* **Adaptive OCR Pipeline** — Use Hugging Face’s [XGB classifier](https://github.com/huggingface/finepdfs?tab=readme-ov-file#ocr-vs-noocr-classifier) to automatically choose the appropriate Docling conversion path.
+* **Graph Database Integration** — Enable direct graph loading into `Neo4j`, `ArangoDB`, and similar systems.
+* **CLI Graph Queries** — Add a `docling-graph query` command to query generated graphs (e.g., with LangChain).
+* **Customizable Components** — Allow user-defined module overrides and flexible component instantiation.
+* **Interactive Template Builder** — Create guided, interactive workflows for generating Pydantic templates.
+* **Optimized Batch Processing** — Improve GPU-based local inference batching and memory utilization.
+* **Persistent Markdown Storage** — Cache and reuse intermediate Markdown outputs from the Docling converter.
 
 
+### 3. Research & Development Ideas
 
-## Contributing
-
-Contributions are welcome! Please see our contributing guidelines.
-
-Areas for contribution:
-- Additional LLM provider support
-- New export formats
-- Visualization improvements
-- Documentation and examples
-- Bug fixes and optimizations
+* **Smart Chunking** — Replace naive context-window splitting with Docling’s structure-aware chunking to preserve logical document relationships (lists, tables, etc.).
+* **Ontology-Based Template Matching** — Use semantic similarity and ontology mapping to automatically select the most relevant Pydantic template for extraction.
+* **Graph Docling Conversion** — Leverage *Docling Graph* to transform datasets such as [FinePDFs](https://huggingface.co/datasets/HuggingFaceFW/finepdfs) or [DocLayNet v1.2](https://huggingface.co/datasets/ds4sd/DocLayNet-v1.2) into paired `document–knowledge graph datasets`, enabling direct doc → knowledge graph model training (bypassing intermediate Pydantic layers).
 
 
 
