@@ -2,14 +2,20 @@
 Pydantic templates for Battery Slurry Ontology.
 
 These models define a comprehensive ontology for battery slurry formulations, processing, and evaluation.
-This version adds enum normalization, structured examples, and string coercion for select fields.
+
+This version incorporates improvements for:
+- Multiple slurries per experiment (anode/cathode)
+- Range support for measurements
+- Enhanced material tracking (supplier, grade, batch)
+- Process sequencing and environmental conditions
+- Temporal stability tracking
+- Research metadata (authors, DOI, institution)
 """
 
 from typing import List, Optional, Union, Any
 from enum import Enum
 import re
-
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 # --- Edge Helper Function ---
@@ -18,14 +24,13 @@ def Edge(label: str, **kwargs: Any) -> Any:
 
 
 # --- Helpers: normalization and parsing ---
-
 def _normalize_enum(enum_cls, v):
     """
     Accept:
-      - enum instance
-      - value strings (e.g., "Viscosity")
-      - member-like strings (e.g., "VISCOSITY", "SOLID_CONTENT")
-      - looser strings with spaces/underscores/case (e.g., "solid content", "Solid_Content")
+    - enum instance
+    - value strings (e.g., "Viscosity")
+    - member-like strings (e.g., "VISCOSITY", "SOLID_CONTENT")
+    - looser strings with spaces/underscores/case (e.g., "solid content", "Solid_Content")
     """
     if isinstance(v, enum_cls):
         return v
@@ -38,46 +43,77 @@ def _normalize_enum(enum_cls, v):
             mapping[re.sub(r'[^A-Za-z0-9]+', '', m.value).lower()] = m
         if key in mapping:
             return mapping[key]
-    # last-ditch attempt
-    try:
-        return enum_cls(v)
-    except Exception:
-        # Prefer safe fallback to OTHER if present
-        if 'OTHER' in getattr(enum_cls, '__members__', {}):
-            return enum_cls.__members__['OTHER']
-        raise
+        # last-ditch attempt
+        try:
+            return enum_cls(v)
+        except Exception:
+            # Prefer safe fallback to OTHER if present
+            if 'OTHER' in getattr(enum_cls, '__members__', {}):
+                return enum_cls.__members__['OTHER']
+            raise
+    raise ValueError(f"Cannot normalize {v} to {enum_cls}")
 
 
-def _parse_measurement_string(s: str, default_name: Optional[str] = None):
+def _parse_measurement_string(s: str, default_name: Optional[str] = None, strict: bool = False):
     """
     Parse strings like:
-      "1.6 mPa.s", "38 wt%", "25 °C", "12 wt %", "80C"
-    into a Measurement-like dict: {name, numeric_value, text_value, unit}.
+    "1.6 mPa.s", "38 wt%", "25 °C", "12 wt %", "80C", "80-90 °C" (ranges)
+    into a Measurement-like dict: {name, numeric_value, numeric_value_min, numeric_value_max, text_value, unit}.
     If numeric parsing fails, preserve as text_value.
+
+    Args:
+        s: String to parse
+        default_name: Default name if not extractable
+        strict: If True, raise error on parse failure; if False, fall back to text_value
     """
     if not isinstance(s, str):
         return s
-    m = re.match(r'^\s*([+-]?\d+(?:\.\d+)?)\s*([^\d]+)?$', s)
-    if m:
-        num = float(m.group(1))
-        unit = (m.group(2) or '').strip() or None
+
+    # Try to parse range (e.g., "80-90 °C")
+    range_match = re.match(r'^\s*([+-]?\d+(?:\.\d+)?)\s*-\s*([+-]?\d+(?:\.\d+)?)\s*([^\d]+)?$', s)
+    if range_match:
+        min_val = float(range_match.group(1))
+        max_val = float(range_match.group(2))
+        unit = (range_match.group(3) or '').strip() or None
         return {
             'name': default_name or 'Value',
-            'numeric_value': num,
+            'numeric_value': None,
+            'numeric_value_min': min_val,
+            'numeric_value_max': max_val,
             'text_value': None,
             'unit': unit,
         }
-    # no numeric part; keep raw as text
+
+    # Try to parse single value
+    single_match = re.match(r'^\s*([+-]?\d+(?:\.\d+)?)\s*([^\d]+)?$', s)
+    if single_match:
+        num = float(single_match.group(1))
+        unit = (single_match.group(2) or '').strip() or None
+        return {
+            'name': default_name or 'Value',
+            'numeric_value': num,
+            'numeric_value_min': None,
+            'numeric_value_max': None,
+            'text_value': None,
+            'unit': unit,
+        }
+
+    # No numeric part found
+    if strict:
+        raise ValueError(f"Cannot parse '{s}' as measurement")
+
+    # Fallback: keep raw as text
     return {
         'name': default_name or 'Value',
         'numeric_value': None,
+        'numeric_value_min': None,
+        'numeric_value_max': None,
         'text_value': s.strip(),
         'unit': None,
     }
 
 
 # 1. --- Foundational Building Blocks ---
-
 class Measurement(BaseModel):
     """A flexible model for any named property with a value and optional unit."""
     model_config = ConfigDict(is_entity=False)
@@ -99,6 +135,18 @@ class Measurement(BaseModel):
         examples=[1.6, 8.2, 35.5, 25],
     )
 
+    numeric_value_min: Optional[Union[float, int]] = Field(
+        default=None,
+        description="Minimum value for range measurements.",
+        examples=[80, 1.5],
+    )
+
+    numeric_value_max: Optional[Union[float, int]] = Field(
+        default=None,
+        description="Maximum value for range measurements.",
+        examples=[90, 2.0],
+    )
+
     unit: Optional[str] = Field(
         default=None,
         description="The unit of measurement, e.g., 'mPa.s', 'wt%', '°C', 'dL/g'.",
@@ -111,6 +159,31 @@ class Measurement(BaseModel):
         examples=["at 10 s⁻¹ shear rate", "after 5 min rest", "storage temperature 25°C"],
     )
 
+    @model_validator(mode='after')
+    def validate_value_consistency(self):
+        """Ensure value fields are used consistently."""
+        has_single = self.numeric_value is not None
+        has_min = self.numeric_value_min is not None
+        has_max = self.numeric_value_max is not None
+        
+        # Allow: single value alone, explicit range (min+max), or implicit range (value+max or value+min)
+        # Only reject if all three are set (ambiguous)
+        if has_single and has_min and has_max:
+            raise ValueError("Cannot specify numeric_value, numeric_value_min, and numeric_value_max simultaneously")
+        
+        # If using implicit range pattern (numeric_value with min or max), treat numeric_value as the other bound
+        if has_single and (has_min or has_max):
+            if has_max and not has_min:
+                # Treat numeric_value as min
+                self.numeric_value_min = self.numeric_value
+                self.numeric_value = None
+            elif has_min and not has_max:
+                # Treat numeric_value as max
+                self.numeric_value_max = self.numeric_value
+                self.numeric_value = None
+        
+        return self
+
 
 class MaterialProperty(Measurement):
     """Represents a material property, inherits from Measurement."""
@@ -118,7 +191,6 @@ class MaterialProperty(Measurement):
 
 
 # 2. --- Materials and Composition ---
-
 class MaterialRole(str, Enum):
     ACTIVE_MATERIAL = "Active Material"
     BINDER = "Binder"
@@ -159,6 +231,24 @@ class Material(BaseModel):
         examples=["(C2H2F2)n", "LiFePO4", "C", "C5H9NO"],
     )
 
+    supplier: Optional[str] = Field(
+        default=None,
+        description="Material supplier/manufacturer.",
+        examples=["Sigma-Aldrich", "MTI Corporation", "Targray", "BASF"],
+    )
+
+    grade: Optional[str] = Field(
+        default=None,
+        description="Material grade or purity level.",
+        examples=["Battery grade", "99.9%", "Technical grade", "Reagent grade"],
+    )
+
+    batch_number: Optional[str] = Field(
+        default=None,
+        description="Batch or lot number for traceability.",
+        examples=["BATCH-2024-001", "LOT-XY123"],
+    )
+
     properties: List[MaterialProperty] = Field(
         default_factory=list,
         description="Properties, e.g., particle size, molecular weight.",
@@ -173,7 +263,7 @@ class ComponentAmount(Measurement):
 
 class Component(BaseModel):
     """Links a material to its role and amount."""
-    model_config = ConfigDict(graph_id_fields=['material', 'role'])
+    model_config = ConfigDict(graph_id_fields=['material', 'role', 'amount'])
 
     material: Material = Edge(
         label="USES_MATERIAL",
@@ -212,9 +302,36 @@ class Property(Measurement):
     pass
 
 
+class SlurryType(str, Enum):
+    """Type of battery slurry."""
+    CATHODE = "Cathode"
+    ANODE = "Anode"
+    ELECTROLYTE = "Electrolyte"
+    SEPARATOR_COATING = "Separator Coating"
+    OTHER = "Other"
+
+
 class Slurry(BaseModel):
     """Collection of slurry components."""
-    model_config = ConfigDict(graph_id_fields=['components'])
+    model_config = ConfigDict(graph_id_fields=['slurry_id'])
+
+    slurry_id: Optional[str] = Field(
+        default=None,
+        description="Unique identifier for this specific slurry formulation.",
+        examples=["CATH-001", "AN-CTRL-01", "SLURRY-2024-001"],
+    )
+
+    slurry_type: Optional[SlurryType] = Field(
+        default=None,
+        description="Whether this is a cathode, anode, or other slurry type.",
+        examples=["Cathode", "Anode"],
+    )
+
+    description: Optional[str] = Field(
+        default=None,
+        description="Purpose or variant description.",
+        examples=["Control formulation", "High solid content variant", "Low binder optimization"],
+    )
 
     components: List[Component] = Edge(
         label="HAS_COMPONENT",
@@ -239,9 +356,15 @@ class Slurry(BaseModel):
         examples=[[{"name": "Solid Content", "numeric_value": 38.0, "unit": "wt%"}]],
     )
 
+    @field_validator('slurry_type', mode='before')
+    @classmethod
+    def _slurry_type_norm(cls, v):
+        if v is None:
+            return v
+        return _normalize_enum(SlurryType, v)
+
 
 # 3. --- Process and Evaluation ---
-
 class ProcessStepType(str, Enum):
     MATERIAL_PREPARATION = "Material Preparation"
     PRE_MIXING = "Pre-mixing"
@@ -268,7 +391,7 @@ class Parameter(Measurement):
 
 class ProcessStep(BaseModel):
     """Describes a process step."""
-    model_config = ConfigDict(graph_id_fields=['step_type', 'name'])
+    model_config = ConfigDict(graph_id_fields=['step_type', 'name', 'sequence_order'])
 
     step_type: ProcessStepType = Field(
         description="Type of step.",
@@ -278,13 +401,46 @@ class ProcessStep(BaseModel):
     name: Optional[str] = Field(
         default=None,
         description="Step descriptive name.",
-        examples=["Primary Nitrogen Drying", "High-speed Mixing"],
+        examples=["Primary Nitrogen Drying", "High-speed Mixing", "Slot-die Coating"],
+    )
+
+    sequence_order: Optional[int] = Field(
+        default=None,
+        description="Order in the process sequence (e.g., 1, 2, 3).",
+        examples=[1, 2, 3],
+    )
+
+    duration: Optional[Measurement] = Field(
+        default=None,
+        description="Duration of this step.",
+        examples=[{"name": "Duration", "numeric_value": 4, "unit": "hours"}],
+    )
+
+    equipment: Optional[str] = Field(
+        default=None,
+        description="Equipment or instrument used.",
+        examples=["Planetary mixer", "Slot-die coater", "Twin-screw extruder", "Convection oven"],
+    )
+
+    atmosphere: Optional[str] = Field(
+        default=None,
+        description="Atmospheric conditions during processing.",
+        examples=["Nitrogen", "Dry room (<1% RH)", "Air", "Argon"],
     )
 
     parameters: List[Parameter] = Field(
         default_factory=list,
         description="Step parameters, e.g., temperature, speed.",
         examples=[[{"name": "Temperature", "numeric_value": 80.0, "unit": "°C"}]],
+    )
+
+    environmental_conditions: List[Parameter] = Field(
+        default_factory=list,
+        description="Environmental parameters like humidity, pressure.",
+        examples=[[
+            {"name": "Relative Humidity", "numeric_value": 5, "unit": "%"},
+            {"name": "Dew Point", "numeric_value": -40, "unit": "°C"}
+        ]],
     )
 
     @field_validator('step_type', mode='before')
@@ -330,7 +486,7 @@ class EvaluationMetric(Measurement):
 
 class EvaluationResult(BaseModel):
     """Captures experimental outcome or metric."""
-    model_config = ConfigDict(graph_id_fields=['metric_type', 'metric'])
+    model_config = ConfigDict(graph_id_fields=['metric_type', 'metric', 'time_point'])
 
     metric_type: MetricType = Field(
         description="Type of performance metric.",
@@ -340,19 +496,28 @@ class EvaluationResult(BaseModel):
     metric: Optional[EvaluationMetric] = Field(
         default=None,
         description="Name and value of the metric.",
-        examples=[[{"name": "Viscosity", "numeric_value": 1.6, "unit": "mPa.s"}]],
+        examples=[{"name": "Viscosity", "numeric_value": 1.6, "unit": "mPa.s"}],
+    )
+
+    time_point: Optional[Measurement] = Field(
+        default=None,
+        description="Time after slurry preparation when measured (for temporal stability tracking).",
+        examples=[
+            {"name": "Storage Time", "numeric_value": 24, "unit": "hours"},
+            {"name": "Age", "numeric_value": 7, "unit": "days"}
+        ],
     )
 
     method: Optional[str] = Field(
         default=None,
         description="Measurement method or standard.",
-        examples=["JIS K6854-1", "Visual Inspection"],
+        examples=["JIS K6854-1", "Visual Inspection", "Rheometer", "ASTM D1084"],
     )
 
     comparison_baseline: Optional[str] = Field(
         default=None,
         description="What is compared against.",
-        examples=["Previous formulation", "Industry average"],
+        examples=["Previous formulation", "Industry average", "Control sample"],
     )
 
     trend: Optional[str] = Field(
@@ -384,11 +549,16 @@ class EvaluationResult(BaseModel):
         return v
 
 
-# 4. --- Main Ontology Entry Point ---
+# 4. --- Main Ontology Entry Points ---
+class Experiment(BaseModel):
+    """Main experiment instance for battery slurry research."""
+    model_config = ConfigDict(graph_id_fields=['experiment_id'])
 
-class Extraction(BaseModel):
-    """Main experiment instance for a battery slurry."""
-    model_config = ConfigDict(graph_id_fields=['slurry_under_test'])
+    experiment_id: Optional[str] = Field(
+        default=None,
+        description="Unique identifier for this experiment.",
+        examples=["EXP-2024-001", "BATTERY-SLURRY-001"],
+    )
 
     objective: Optional[str] = Field(
         default=None,
@@ -402,41 +572,58 @@ class Extraction(BaseModel):
         examples=["Adjusting binder ratio will lower viscosity", "Adding dispersant increases stability"],
     )
 
-    slurry_under_test: Slurry = Edge(
+    slurries: List[Slurry] = Edge(
         label="HAS_SLURRY",
-        description="Slurry formulation tested.",
-        examples=[{
-            "slurry_id": "SLURRY-001",
-            "components": [
-                {
-                    "material": {"name": "LiFePO4", "chemical_formula": "LiFePO4", "category": "Olivine Phosphate"},
-                    "role": "Active Material",
-                    "amount": {"name": "Weight Fraction", "numeric_value": 91.0, "unit": "wt%"},
-                },
-                {
-                    "material": {"name": "Carbon Black", "category": "Additive", "chemical_formula": "C"},
-                    "role": "Conductive Additive",
-                    "amount": {"name": "Weight Fraction", "numeric_value": 6.0, "unit": "wt%"},
-                },
-                {
-                    "material": {"name": "Polyvinylidene Fluoride", "category": "Fluoropolymer", "chemical_formula": "(C2H2F2)n"},
-                    "role": "Binder",
-                    "amount": {"name": "Weight Fraction", "numeric_value": 3.0, "unit": "wt%"},
-                }
-            ],
-            "properties": [{"name": "Solid Content", "numeric_value": 50.0, "unit": "wt%"}]
-        }],
+        description="All slurries tested in this experiment (anode, cathode, variants).",
+        examples=[[
+            {
+                "slurry_id": "CATH-001",
+                "slurry_type": "Cathode",
+                "description": "Control cathode formulation",
+                "components": [
+                    {
+                        "material": {"name": "LiFePO4", "chemical_formula": "LiFePO4"},
+                        "role": "Active Material",
+                        "amount": {"name": "Weight Fraction", "numeric_value": 91.0, "unit": "wt%"},
+                    }
+                ]
+            },
+            {
+                "slurry_id": "AN-001",
+                "slurry_type": "Anode",
+                "description": "Graphite anode",
+                "components": [
+                    {
+                        "material": {"name": "Graphite", "chemical_formula": "C"},
+                        "role": "Active Material",
+                        "amount": {"name": "Weight Fraction", "numeric_value": 94.0, "unit": "wt%"},
+                    }
+                ]
+            }
+        ]],
+    )
+
+    control_slurry_id: Optional[str] = Field(
+        default=None,
+        description="Reference to control/baseline slurry for comparison.",
+        examples=["CATH-CTRL-001", "AN-BASE"],
+    )
+
+    comparison_notes: Optional[str] = Field(
+        default=None,
+        description="Qualitative comparison observations.",
+        examples=["20% viscosity reduction vs. control", "Improved stability compared to baseline"],
     )
 
     fabrication_process: List[ProcessStep] = Edge(
         label="HAS_PROCESS_STEP",
         description="List of manufacturing process steps.",
         examples=[[
-            {"step_type": "Mixing", "name": "High-shear Mixing", "parameters": [
+            {"step_type": "Mixing", "name": "High-shear Mixing", "sequence_order": 1, "parameters": [
                 {"name": "Speed", "numeric_value": 2000, "unit": "rpm"}
             ]},
-            {"step_type": "Coating", "name": "Slot-die Coating"},
-            {"step_type": "Drying", "name": "Convection Drying", "parameters": [
+            {"step_type": "Coating", "name": "Slot-die Coating", "sequence_order": 2},
+            {"step_type": "Drying", "name": "Convection Drying", "sequence_order": 3, "parameters": [
                 {"name": "Temperature", "numeric_value": 80.0, "unit": "°C"}
             ]}
         ]],
@@ -446,9 +633,8 @@ class Extraction(BaseModel):
         label="HAS_EVALUATION",
         description="Experiment evaluation results.",
         examples=[[
-            {"metric_type": "Viscosity", "metric": {"name": "Viscosity", "numeric_value": 1.6, "unit": "mPa.s"}, "method": "Visual Inspection", "trend": "Increasing"},
+            {"metric_type": "Viscosity", "metric": {"name": "Viscosity", "numeric_value": 1.6, "unit": "mPa.s"}, "method": "Rheometer", "trend": "Stable"},
             {"metric_type": "pH", "metric": {"name": "pH", "numeric_value": 12.3}, "method": "pH Meter", "trend": "Stable"},
-            {"metric_type": "Solid Content", "metric": {"name": "Solid Content", "numeric_value": 50.0, "unit": "wt%"}, "trend": "Stable"}
         ]],
     )
 
@@ -467,7 +653,7 @@ class Extraction(BaseModel):
     limitations: Optional[List[str]] = Field(
         default_factory=list,
         description="Stated limitations of the experiment.",
-        examples=["Limited range of binder ratios tested"]
+        examples=["Limited range of binder ratios tested", "Single temperature condition evaluated"]
     )
 
     @field_validator('limitations', mode='before')
@@ -490,7 +676,31 @@ class Research(BaseModel):
         examples=["Preparation and Characterization of Novel Battery Slurries", "Large-Scale Manufacturing of Lithium-Ion Cathodes"],
     )
 
-    experiments: List[Extraction] = Edge(
+    authors: List[str] = Field(
+        default_factory=list,
+        description="Document authors.",
+        examples=[["Smith, J.", "Doe, A.", "Chen, L."]],
+    )
+
+    publication_date: Optional[str] = Field(
+        default=None,
+        description="Publication or submission date.",
+        examples=["2024-03-15", "March 2024"],
+    )
+
+    doi: Optional[str] = Field(
+        default=None,
+        description="Digital Object Identifier.",
+        examples=["10.1002/example.12345"],
+    )
+
+    institution: Optional[str] = Field(
+        default=None,
+        description="Primary research institution.",
+        examples=["MIT", "Stanford University", "Fraunhofer Institute"],
+    )
+
+    experiments: List[Experiment] = Edge(
         label="HAS_EXPERIMENT",
         description="List of experiments included in the document.",
         examples=[[{"experiment_id": "EXP2024-001"}, {"experiment_id": "BATTERY-SLURRY-001"}]],
