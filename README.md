@@ -96,7 +96,7 @@ The interactive wizard will walk you through:
 - **Processing Mode** – Choose between `one-to-one` (page-by-page) or `many-to-one` (entire document) processing  
 - **Backend Type** – Select `llm` (Language Model) or `vlm` (Vision-Language Model) for extraction  
 - **Inference Location** – Choose `local` (your machine) or `remote` (cloud APIs)  
-- **Export Format** – Select `csv`, `json` or `cypher` for knowledge graph output  
+- **Export Format** – Select `csv` or `cypher` for knowledge graph output  
 - **Docling Pipeline** – Choose document processing pipeline (`ocr`, or `vision`)  
 - **Model Configuration** – Select specific models based on your backend and inference choices  
 - **Output Settings** – Configure output directory and visualization preferences  
@@ -131,7 +131,7 @@ Converts documents into knowledge graphs with full extraction and export capabil
 - `--output-dir, -o` : Output directory (default: `outputs`)  
 - `--model` : Override model name  
 - `--provider` : Override provider  
-- `--export-format, -e` : `csv` | `json` | `cypher`  
+- `--export-format, -e` : `csv` | `cypher`  
 - `--reverse-edges` : Add reverse edges to graph
 
 #### 1.3. Convert Examples

@@ -71,7 +71,7 @@ def convert_command(
     )] = None,
     export_format: Annotated[Optional[str], typer.Option(
         "--export-format", "-e",
-        help="Export format: 'csv', 'json' or 'cypher'."
+        help="Export format: 'csv' or 'cypher'."
     )] = None,
     reverse_edges: Annotated[bool, typer.Option(
         "--reverse-edges", "-r",

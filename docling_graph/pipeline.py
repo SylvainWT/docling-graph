@@ -140,7 +140,7 @@ def run_pipeline(config: Dict[str, Any]) -> None:
             - docling_config: Docling pipeline config ('ocr' or 'vision')
             - reverse_edges: Whether to add reverse edges
             - output_dir: Output directory path
-            - export_format: Export format ('csv', 'cypher', 'json')
+            - export_format: Export format ('csv', 'cypher')
             - config: Nested config with models, etc.
             - model_override: Optional model override
             - provider_override: Optional provider override
@@ -258,11 +258,11 @@ def run_pipeline(config: Dict[str, Any]) -> None:
             exporter.export(knowledge_graph, cypher_path)
             print(f"[green]->[/green] Saved Cypher script to [green]{cypher_path}[/green]")
 
-        elif export_format == "json":
-            json_path = output_dir / f"{base_name}_graph.json"
-            exporter = JSONExporter()
-            exporter.export(knowledge_graph, json_path)
-            print(f"[green]->[/green] Saved JSON to [green]{json_path}[/green]")
+        # Always export to JSON format
+        json_path = output_dir / f"{base_name}_graph.json"
+        exporter = JSONExporter()
+        exporter.export(knowledge_graph, json_path)
+        print(f"[green]->[/green] Saved JSON to [green]{json_path}[/green]")
 
         # 8. Generate visualizations
         print(f"[green]->[/green] Generating visualizations...")
