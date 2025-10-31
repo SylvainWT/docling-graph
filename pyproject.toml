@@ -1,36 +1,40 @@
-# This file defines your python project and its CLI entrypoint
-[build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
-
 [project]
 name = "docling_graph"
 version = "0.1.0"
 description = "A tool to convert documents into knowledge graphs using Docling."
-readme = "README.md"
-requires-python = ">=3.9"
+
 license = { text = "MIT License" }
+keywords = ["docling", "knowledge-graph", "nlp", "pdf", "graph"]
 classifiers = [
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: Microsoft :: Windows",
+    "Intended Audience :: Developers",
     "Programming Language :: Python :: 3",
-    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",    
 ]
-# Add all dependencies from requirements.txt here
+readme = "README.md"
+authors = [ # FIXME: Please add the others
+  { name = "Ayoub El Bouchtili", email = "ayoub.elbouchtili@fr.ibm.com" },
+  { name = "Sophie Lang", email = "sophie.lang@de.ibm.com" },
+  { name = "Maxime Gillot", email = "Maxime.Gillot@ibm.com" },  
+  { name = "Guilhaume Leroy Meline", email = "guilhaume@fr.ibm.com" },
+  { name = "Peter Staar", email = "taa@zurich.ibm.com" },
+]
+requires-python = ">=3.10,<4.0"
 dependencies = [
-    "docling[vlm]",
-    "pydantic",
-    "networkx>=3.0",
-    "matplotlib>=3.7.0",
-    "pyvis>=0.3.2",
-    "cosmograph",
-    "rich",
-    "typer[all]",
-    "python-dotenv",
-    "ollama",
-    "openai",
-    "mistralai",
-    # "google",
-    # "google-genai",
-    # "ibm-watson-machine-learning"
+    "docling-core[chunking]>=2.50.0,<3.0.0",
+    "docling[vlm]>=2.0.0,<3.0.0",
+    "pydantic>=2.0.0,<3.0.0",
+    "networkx>=3.0.0,<4.0.0",
+    "matplotlib>=3.7.0,<4.0.0",
+    "pyvis>=0.3.2,<1.0.0",
+    "rich>=13,<14",  # verify constraints you need
+    "typer[all]>=0.12,<1.0.0",  # verify min version used in code
+    "python-dotenv>=1.0,<2.0",
 ]
 
 [project.urls]
@@ -43,12 +47,23 @@ changelog = "https://github.com/ayoub-ibm/docling-graph/blob/main/CHANGELOG.md"
 docling-graph = "docling_graph.cli.main:main"
 
 [project.optional-dependencies]
-# Development tools (linters, formatters, type-checkers) and common developer utilities
+# Cosmo related optional dependencies (FIXME: GPL3!)
+cosmo = [
+    "cosmograph"
+]
+
+# LLM-related optional dependencies
+llm = [
+    "ollama",
+    "openai",
+    "mistralai",
+]
+
+[dependency-groups]
+# Development tools (linters, type-checkers) and utilities
 dev = [
     "mypy>=1.4.0",
     "ruff>=0.0.280",
-    "black>=23.7.0",
-    "isort>=5.12.0",
 ]
 
 # Test stack and utilities
@@ -65,7 +80,6 @@ test = [
     "faker>=19.0.0",
     "types-PyYAML",
     "types-requests",
-    # Some teams also install type checkers via test extras
     "mypy>=1.4.0",
 ]
 
@@ -76,11 +90,77 @@ notebook = [
     "pandas",
 ]
 
+[tool.uv]
+package = true
+default-groups = "all"
+
 [tool.setuptools.packages.find]
 include = ["docling_graph*"]
 
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+respect-gitignore = true
+
+[tool.ruff.format]
+skip-magic-trailing-comma = false
+
+[tool.ruff.lint]
+select = [
+  "E",    # pycodestyle errors
+  "W",    # pycodestyle warnings
+  "F",    # pyflakes
+  "I",    # isort
+  "N",    # pep8-naming
+  "UP",   # pyupgrade
+  "B",    # flake8-bugbear
+  "A",    # flake8-builtins
+  "C4",   # flake8-comprehensions
+  "C90",  # mccabe (complexity)
+  "ANN",  # flake8-annotations
+  "PD",   # pandas-vet
+  "PIE",  # flake8-pie
+  "Q",    # flake8-quotes
+  "RUF",  # Ruff-specific checks
+  "ASYNC" # async
+]
+ignore = [
+  "C408",   # Unnecessary `dict()` call (rewrite as a literal)
+  "E501",   # Line too long, handled by ruff formatter
+  "D107",   # "Missing docstring in __init__",
+  "F401",   # imported but unused; consider using `importlib.util.find_spec` to test for "
+  "F811",   # "redefinition of the same function"
+  "PL",     # Pylint
+  "RUF012", # Mutable Class Attributes
+  "UP006",  # List vs list, etc
+  "UP007",  # Option and Union
+  "UP035",  # `typing.Set` is deprecated, use `set` instead"
+    "ANN101",  # Missing type annotation for self
+    "ANN102",  # Missing type annotation for cls
+    "ANN401",  # Dynamically typed expressions (Any)
+]
+
+[tool.ruff.lint.pep8-naming]
+classmethod-decorators = [
+  # Allow Pydantic's `@validator` decorator to trigger class method treatment.
+  "pydantic.validator",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["E402", "F401"]
+"tests/*.py" = ["ASYNC"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 30
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
+
 [tool.mypy]
+pretty = true
 python_version = "3.10"
+no_implicit_optional = true
+plugins = "pydantic.mypy"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
@@ -112,25 +192,15 @@ module = [
 ]
 ignore_missing_imports = true
 
-[tool.ruff]
-line-length = 100
-target-version = "py310"
+[tool.semantic_release]
+# for default values check:
+# https://github.com/python-semantic-release/python-semantic-release/blob/v7.32.2/semantic_release/defaults.cfg
 
-[tool.ruff.lint]
-select = [
-    "E",   # pycodestyle errors
-    "W",   # pycodestyle warnings  
-    "F",   # pyflakes
-    "I",   # isort
-    "N",   # pep8-naming
-    "UP",  # pyupgrade
-    "ANN", # flake8-annotations
-    "B",   # flake8-bugbear
-    "A",   # flake8-builtins
-    "C4",  # flake8-comprehensions
-]
-ignore = [
-    "ANN101",  # Missing type annotation for self
-    "ANN102",  # Missing type annotation for cls
-    "ANN401",  # Dynamically typed expressions (Any)
-]
+# version_source = "tag_only"
+# branch = "main"
+
+# configure types which should trigger minor and patch version bumps respectively
+# (note that they must be a subset of the configured allowed types):
+# parser_angular_allowed_types = "build,chore,ci,docs,feat,fix,perf,style,refactor,test"
+# parser_angular_minor_types = "feat"
+# parser_angular_patch_types = "fix,perf"
