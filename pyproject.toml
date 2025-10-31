@@ -62,6 +62,25 @@ llm = [
 [dependency-groups]
 # Development tools (linters, type-checkers) and utilities
 dev = [
+    "pre-commit~=3.7",
+    "mypy~=1.10",
+    "types-setuptools~=70.3",
+    "pandas-stubs~=2.1",
+    "types-openpyxl~=3.1",
+    "types-requests~=2.31",
+    "boto3-stubs~=1.37",
+    "types-urllib3~=1.26",
+    "types-tqdm~=4.67",
+    "coverage~=7.6",
+    "pytest~=8.3",
+    "pytest-cov>=6.1.1",
+    "pytest-dependency~=0.6",
+    "pytest-durations~=1.6.1",
+    "pytest-xdist~=3.3",
+    "ipykernel~=6.29",
+    "ipywidgets~=8.1",
+    "nbqa~=1.9",
+    "python-semantic-release~=7.32",
     "mypy>=1.4.0",
     "ruff>=0.0.280",
 ]
