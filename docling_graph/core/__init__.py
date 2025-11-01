@@ -17,20 +17,16 @@ from .visualizers.interactive_visualizer import InteractiveVisualizer
 from .visualizers.report_generator import ReportGenerator
 
 __all__ = [
-    # Core
+    "CSVExporter",
+    "CypherExporter",
+    "DoclingExporter",
+    "Edge",
+    "ExportConfig",
+    "ExtractorFactory",
+    "GraphConfig",
     "GraphConverter",
     "GraphMetadata",
-    "ExportConfig",
-    "GraphConfig",
-    "Edge",
-    # Extractors
-    "ExtractorFactory",
-    # Exporters
-    "DoclingExporter",
-    "CypherExporter",
-    "CSVExporter",
-    "JSONExporter",
-    # Visualizers
     "InteractiveVisualizer",
+    "JSONExporter",
     "ReportGenerator",
 ]

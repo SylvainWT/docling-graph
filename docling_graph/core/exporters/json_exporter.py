@@ -2,7 +2,7 @@
 
 import json
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 import networkx as nx
 
@@ -12,7 +12,7 @@ from ..base.config import ExportConfig
 class JSONExporter:
     """Export graph to JSON format."""
 
-    def __init__(self, config: Optional[ExportConfig] = None):
+    def __init__(self, config: Optional[ExportConfig] = None) -> None:
         """Initialize JSON exporter.
 
         Args:
@@ -51,7 +51,8 @@ class JSONExporter:
         Returns:
             True if graph has nodes.
         """
-        return graph.number_of_nodes() > 0
+        num_nodes = cast(int, graph.number_of_nodes())
+        return num_nodes > 0
 
     @staticmethod
     def _graph_to_dict(graph: nx.DiGraph) -> Dict[str, Any]:

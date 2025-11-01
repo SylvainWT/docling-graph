@@ -63,7 +63,7 @@ class TestPipelineOutputs:
 
     def test_pipeline_creates_output_directory(self, temp_dir):
         """Test that pipeline creates output directory."""
-        output_dir = temp_dir / "outputs" / "nested"
+        _ = temp_dir / "outputs" / "nested"
 
         # Mock and run pipeline with this output_dir
         # Verify directory is created

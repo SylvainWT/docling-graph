@@ -27,7 +27,7 @@ app.command(name="convert", help="Convert a document to a knowledge graph.")(con
 app.command(name="inspect", help="Visualize graph data in the browser.")(inspect_command)
 
 
-def main():
+def main() -> None:
     """Main entry point for the CLI."""
     app()
 

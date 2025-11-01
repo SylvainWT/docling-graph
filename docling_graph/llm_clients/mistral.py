@@ -6,11 +6,11 @@ Based on https://docs.mistral.ai/api/endpoint/chat
 
 import json
 import os
-from typing import Any, Dict
+from typing import Any, Dict, cast
 
 from dotenv import load_dotenv
 from mistralai import Mistral
-from rich import print
+from rich import print as rich_print
 
 from .llm_base import BaseLlmClient
 
@@ -21,7 +21,7 @@ load_dotenv()
 class MistralClient(BaseLlmClient):
     """Mistral API implementation matching official example."""
 
-    def __init__(self, model: str):
+    def __init__(self, model: str) -> None:
         self.model = model
         self.api_key = os.getenv("MISTRAL_API_KEY")
 
@@ -42,7 +42,7 @@ class MistralClient(BaseLlmClient):
         }
 
         self._context_limit = model_context_limits.get(model, 32000)
-        print(f"[MistralClient] Initialized for [blue]{self.model}[/blue]")
+        rich_print(f"[MistralClient] Initialized for [blue]{self.model}[/blue]")
 
     def get_json_response(self, prompt: str | dict, schema_json: str) -> Dict[str, Any]:
         """
@@ -58,7 +58,7 @@ class MistralClient(BaseLlmClient):
             Parsed JSON response from Mistral.
         """
         # Build messages list - EXACTLY like official example
-        messages = []
+        messages: list[dict[str, str]] = []
 
         if isinstance(prompt, dict):
             # Extract system and user content
@@ -67,9 +67,9 @@ class MistralClient(BaseLlmClient):
 
             # Validate we have content
             if not system_content or not user_content:
-                print("[yellow]Warning:[/yellow] Empty system or user prompt")
-                print(f"  System: {bool(system_content)}")
-                print(f"  User: {bool(user_content)}")
+                rich_print("[yellow]Warning:[/yellow] Empty system or user prompt")
+                rich_print(f"  System: {bool(system_content)}")
+                rich_print(f"  User: {bool(user_content)}")
 
             # Add system message if present
             if system_content:
@@ -90,7 +90,7 @@ class MistralClient(BaseLlmClient):
         else:
             # Legacy string prompt
             if not prompt:
-                print("[yellow]Warning:[/yellow] Empty prompt string")
+                rich_print("[yellow]Warning:[/yellow] Empty prompt string")
                 prompt = "Please provide a JSON response."
 
             messages.append(
@@ -102,9 +102,10 @@ class MistralClient(BaseLlmClient):
 
         try:
             # Call Mistral API
+            # The SDK expects typed message objects; cast our dict list for type-checking
             res = self.client.chat.complete(
                 model=self.model,
-                messages=messages,
+                messages=cast(Any, messages),
                 response_format={"type": "json_object"},
                 temperature=0.1,
             )
@@ -114,27 +115,44 @@ class MistralClient(BaseLlmClient):
 
             # Parse JSON
             if not response_content:
-                print("[red]Error:[/red] Mistral returned empty content")
+                rich_print("[red]Error:[/red] Mistral returned empty content")
                 return {}
 
             try:
-                parsed_json = json.loads(response_content)
+                # response_content may be str or list of chunks; handle both
+                if isinstance(response_content, str):
+                    raw = response_content
+                else:
+                    # Extract text from any chunk-like objects
+                    parts: list[str] = []
+                    for chunk in response_content:
+                        text = getattr(chunk, "text", None)
+                        if isinstance(text, str):
+                            parts.append(text)
+                    raw = "".join(parts)
+
+                parsed = json.loads(raw)
 
                 # Validate it's not empty
-                if not parsed_json or (
-                    isinstance(parsed_json, dict) and not any(parsed_json.values())
-                ):
-                    print("[yellow]Warning:[/yellow] Mistral returned empty or all-null JSON")
+                if not parsed or (isinstance(parsed, dict) and not any(parsed.values())):
+                    rich_print("[yellow]Warning:[/yellow] Mistral returned empty or all-null JSON")
 
-                return parsed_json
+                # Ensure return type is a dict
+                if isinstance(parsed, dict):
+                    return cast(Dict[str, Any], parsed)
+                else:
+                    rich_print(
+                        "[yellow]Warning:[/yellow] Expected a JSON object; got non-dict. Returning empty dict."
+                    )
+                    return {}
 
             except json.JSONDecodeError as e:
-                print(f"[red]Error:[/red] Failed to parse Mistral response as JSON: {e}")
-                print(f"[yellow]Raw response:[/yellow] {response_content}")
+                rich_print(f"[red]Error:[/red] Failed to parse Mistral response as JSON: {e}")
+                rich_print(f"[yellow]Raw response:[/yellow] {response_content}")
                 return {}
 
         except Exception as e:
-            print(f"[red]Error:[/red] Mistral API call failed: {e}")
+            rich_print(f"[red]Error:[/red] Mistral API call failed: {e}")
             import traceback
 
             traceback.print_exc()

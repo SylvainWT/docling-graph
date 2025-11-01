@@ -7,9 +7,10 @@ to graph generation, export, and visualization using the graph module.
 
 import importlib
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, cast
 
-from rich import print
+from pydantic import BaseModel
+from rich import print as rich_print
 
 # Import core components
 from .core import (
@@ -28,7 +29,7 @@ from .core import (
 from .llm_clients import BaseLlmClient, MistralClient, OllamaClient, VllmClient
 
 
-def _load_template_class(template_str: str):
+def _load_template_class(template_str: str) -> type[BaseModel]:
     """Dynamically imports a Pydantic model class from a string.
 
     Args:
@@ -40,16 +41,19 @@ def _load_template_class(template_str: str):
     Raises:
         Exception: If template cannot be loaded.
     """
-    print(f"Loading template: [yellow]{template_str}[/yellow]")
+    rich_print(f"Loading template: [yellow]{template_str}[/yellow]")
 
     try:
         module_path, class_name = template_str.rsplit(".", 1)
         module = importlib.import_module(module_path)
-        TemplateClass = getattr(module, class_name)
-        print(f"[green]Successfully loaded Pydantic template: {class_name}[/green]")
-        return TemplateClass
+        obj = getattr(module, class_name)
+        # Ensure the loaded object is a Pydantic model class
+        if not isinstance(obj, type) or not issubclass(obj, BaseModel):
+            raise TypeError("Template must be a subclass of pydantic.BaseModel")
+        rich_print(f"[green]Successfully loaded Pydantic template: {class_name}[/green]")
+        return obj
     except Exception as e:
-        print(f"[red]Failed to load template {template_str}:[/red] {e}")
+        rich_print(f"[red]Failed to load template {template_str}:[/red] {e}")
         raise
 
 
@@ -140,12 +144,12 @@ def run_pipeline(config: Dict[str, Any]) -> None:
             - model_override: Optional model override
             - provider_override: Optional provider override
     """
-    print("\n--- [blue]Starting Docling-Graph Pipeline[/blue] ---")
+    rich_print("\n--- [blue]Starting Docling-Graph Pipeline[/blue] ---")
 
-    processing_mode = config.get("processing_mode")
-    backend_type = config.get("backend_type")
-    inference = config.get("inference")
-    docling_config = config.get("docling_config", "ocr")
+    processing_mode: str = cast(str, config.get("processing_mode", ""))
+    backend_type: str = cast(str, config.get("backend_type", ""))
+    inference: str = cast(str, config.get("inference", ""))
+    docling_config: str = cast(str, config.get("docling_config", "ocr"))
     reverse_edges = config.get("reverse_edges", False)
 
     # Initialize variables for cleanup
@@ -160,25 +164,25 @@ def run_pipeline(config: Dict[str, Any]) -> None:
     try:
         # 1. Load Template
         try:
-            TemplateClass = _load_template_class(config["template"])
+            template_class = _load_template_class(config["template"])
         except Exception:
             return
 
         # 2. Get model configuration
         try:
             model_config = _get_model_config(
-                config.get("config", {}),
+                cast(Dict[str, Any], config.get("config", {})),
                 backend_type,
                 inference,
-                config.get("model_override"),
-                config.get("provider_override"),
+                cast(Optional[str], config.get("model_override")),
+                cast(Optional[str], config.get("provider_override")),
             )
-            print(
+            rich_print(
                 f"Using model: [cyan]{model_config['model']}[/cyan] "
                 f"(provider: {model_config['provider']})"
             )
         except Exception as e:
-            print(f"[red]Configuration error:[/red] {e}")
+            rich_print(f"[red]Configuration error:[/red] {e}")
             return
 
         # 3. Create extractor using factory
@@ -199,24 +203,24 @@ def run_pipeline(config: Dict[str, Any]) -> None:
                     docling_config=docling_config,
                 )
             else:
-                print(f"[red]Error:[/red] Invalid backend_type: {backend_type}")
+                rich_print(f"[red]Error:[/red] Invalid backend_type: {backend_type}")
                 return
         except Exception as e:
-            print(f"[red]Failed to create extractor:[/red] {e}")
+            rich_print(f"[red]Failed to create extractor:[/red] {e}")
             return
 
         # 4. Run Extraction
-        extracted_data = extractor.extract(config["source"], TemplateClass)
+        extracted_data = extractor.extract(config["source"], template_class)
 
         if not extracted_data:
-            print("[red]Pipeline stopped: Extraction returned no data.[/red]")
+            rich_print("[red]Pipeline stopped: Extraction returned no data.[/red]")
             return
 
-        print(f"Successfully extracted {len(extracted_data)} item(s).")
+        rich_print(f"Successfully extracted {len(extracted_data)} item(s).")
 
         # Docling document and markdown export
         if config.get("export_docling", True):
-            print("Exporting Docling document and markdown...")
+            rich_print("Exporting Docling document and markdown...")
             docling_exporter = DoclingExporter(output_dir=output_dir)
 
             # Get the document from extractor
@@ -236,7 +240,7 @@ def run_pipeline(config: Dict[str, Any]) -> None:
                 )
 
         # 5. Convert to Graph
-        print("Converting Pydantic model(s) to Knowledge Graph...")
+        rich_print("Converting Pydantic model(s) to Knowledge Graph...")
 
         # Create graph config with custom settings
         graph_config = GraphConfig(add_reverse_edges=reverse_edges)
@@ -247,34 +251,34 @@ def run_pipeline(config: Dict[str, Any]) -> None:
         # Convert models to graph (NOW RETURNS TUPLE!)
         knowledge_graph, graph_metadata = converter.pydantic_list_to_graph(extracted_data)
 
-        print(
+        rich_print(
             f"Graph created with [blue]{graph_metadata.node_count} nodes[/blue] "
             f"and [blue]{graph_metadata.edge_count} edges[/blue]."
         )
 
         # 6. Export graph
         export_format = config.get("export_format", "csv")
-        print(f"Exporting graph data in [cyan]{export_format.upper()}[/cyan] format...")
+        rich_print(f"Exporting graph data in [cyan]{export_format.upper()}[/cyan] format...")
 
         if export_format == "csv":
-            exporter = CSVExporter()
-            exporter.export(knowledge_graph, output_dir)
-            print(f"[green]→[/green] Saved CSV files to [green]{output_dir}[/green]")
+            csv_exporter = CSVExporter()
+            csv_exporter.export(knowledge_graph, output_dir)
+            rich_print(f"[green]→[/green] Saved CSV files to [green]{output_dir}[/green]")
 
         elif export_format == "cypher":
             cypher_path = output_dir / f"{base_name}_graph.cypher"
-            exporter = CypherExporter()
-            exporter.export(knowledge_graph, cypher_path)
-            print(f"[green]→[/green] Saved Cypher script to [green]{cypher_path}[/green]")
+            cypher_exporter = CypherExporter()
+            cypher_exporter.export(knowledge_graph, cypher_path)
+            rich_print(f"[green]→[/green] Saved Cypher script to [green]{cypher_path}[/green]")
 
         # Always export to JSON format
         json_path = output_dir / f"{base_name}_graph.json"
-        exporter = JSONExporter()
-        exporter.export(knowledge_graph, json_path)
-        print(f"[green]→[/green] Saved JSON to [green]{json_path}[/green]")
+        json_exporter = JSONExporter()
+        json_exporter.export(knowledge_graph, json_path)
+        rich_print(f"[green]→[/green] Saved JSON to [green]{json_path}[/green]")
 
         # 7. Generate reports
-        print("Generating outputs...")
+        rich_print("Generating outputs...")
 
         # Markdown report
         report_generator = ReportGenerator()
@@ -282,19 +286,19 @@ def run_pipeline(config: Dict[str, Any]) -> None:
         report_generator.visualize(
             knowledge_graph, report_path, source_model_count=len(extracted_data)
         )
-        print("[green]→[/green] Generated markdown report")
+        rich_print("[green]→[/green] Generated markdown report")
 
         # Interactive HTML Graph
         html_path = output_dir / f"{base_name}_graph"
         visualizer = InteractiveVisualizer()
         visualizer.save_cytoscape_graph(knowledge_graph, html_path)
-        print("[green]→[/green] Generated interactive html graph")
+        rich_print("[green]→[/green] Generated interactive html graph")
 
-        print("--- [blue]Pipeline Finished Successfully[/blue] ---")
+        rich_print("--- [blue]Pipeline Finished Successfully[/blue] ---")
 
     finally:
         # Cleanup resources
-        print("Cleaning up resources...")
+        rich_print("Cleaning up resources...")
 
         # Clean up extractor and its components
         if extractor is not None:

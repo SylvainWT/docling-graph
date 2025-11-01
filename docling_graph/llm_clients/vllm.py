@@ -5,20 +5,14 @@ Cross-platform (Linux/Windows) via vLLM server mode.
 """
 
 import json
-from typing import Any, Dict
+from typing import TYPE_CHECKING, Any, Dict, cast
 
-from rich import print
+from rich import print as rich_print
 
 from .llm_base import BaseLlmClient
 
-# Requires `pip install openai` (OpenAI Python client)
-try:
-    from openai import OpenAI
-
-    OPENAI_AVAILABLE = True
-except ImportError:
-    OPENAI_AVAILABLE = False
-    OpenAI = None
+if TYPE_CHECKING:  # Only imported for type checking; avoids runtime dependency at import
+    from openai.types.chat import ChatCompletionMessageParam
 
 
 class VllmClient(BaseLlmClient):
@@ -26,7 +20,7 @@ class VllmClient(BaseLlmClient):
 
     def __init__(
         self, model: str, base_url: str = "http://localhost:8000/v1", api_key: str = "EMPTY"
-    ):
+    ) -> None:
         """
         Initialize vLLM client.
 
@@ -40,10 +34,13 @@ class VllmClient(BaseLlmClient):
             2. Server will run at http://localhost:8000
             3. Client will connect automatically
         """
-        if not OPENAI_AVAILABLE:
+        # Import OpenAI client lazily to avoid module-level type issues
+        try:
+            from openai import OpenAI
+        except ImportError as e:  # pragma: no cover - import-time error handling
             raise ImportError(
                 "OpenAI client is required for vLLM. Install it with: pip install openai"
-            )
+            ) from e
 
         self.model = model
         self.base_url = base_url
@@ -68,21 +65,21 @@ class VllmClient(BaseLlmClient):
 
         # Test connection
         try:
-            print(
+            rich_print(
                 f"[blue][VllmClient][/blue] Connecting to vLLM server at: [cyan]{self.base_url}[/cyan]"
             )
             # Test connection by listing models
-            models = self.client.models.list()
-            print("[blue][VllmClient][/blue] Connected successfully")
-            print(f"[blue][VllmClient][/blue] Using model: [blue]{self.model}[/blue]")
+            self.client.models.list()
+            rich_print("[blue][VllmClient][/blue] Connected successfully")
+            rich_print(f"[blue][VllmClient][/blue] Using model: [blue]{self.model}[/blue]")
         except Exception as e:
-            print(f"[red]✗ vLLM connection failed:[/red] {e}")
-            print("\n[yellow]Setup instructions:[/yellow]")
-            print("  1. Start vLLM server in a separate terminal:")
-            print(f"     [cyan]vllm serve {self.model}[/cyan]")
-            print("  2. Wait for server to load (may take 1-2 minutes)")
-            print(f"  3. Ensure server is accessible at: [cyan]{self.base_url}[/cyan]")
-            print("\n[dim]On Windows: Run vLLM server in WSL2 or Docker[/dim]")
+            rich_print(f"[red]✗ vLLM connection failed:[/red] {e}")
+            rich_print("\n[yellow]Setup instructions:[/yellow]")
+            rich_print("  1. Start vLLM server in a separate terminal:")
+            rich_print(f"     [cyan]vllm serve {self.model}[/cyan]")
+            rich_print("  2. Wait for server to load (may take 1-2 minutes)")
+            rich_print(f"  3. Ensure server is accessible at: [cyan]{self.base_url}[/cyan]")
+            rich_print("\n[dim]On Windows: Run vLLM server in WSL2 or Docker[/dim]")
             raise
 
     def get_json_response(self, prompt: str | dict, schema_json: str) -> Dict[str, Any]:
@@ -97,6 +94,8 @@ class VllmClient(BaseLlmClient):
             Parsed JSON response from vLLM.
         """
         # Handle both legacy string prompts and new dict prompts
+        # Define once to avoid mypy no-redef when annotating in both branches
+        messages: list[ChatCompletionMessageParam]
         if isinstance(prompt, dict):
             messages = [
                 {"role": "system", "content": prompt.get("system", "")},
@@ -122,7 +121,7 @@ class VllmClient(BaseLlmClient):
 
             # Parse JSON
             if not raw_json:
-                print("[red]Error:[/red] vLLM returned empty content")
+                rich_print("[red]Error:[/red] vLLM returned empty content")
                 return {}
 
             try:
@@ -132,16 +131,23 @@ class VllmClient(BaseLlmClient):
                 if not parsed_json or (
                     isinstance(parsed_json, dict) and not any(parsed_json.values())
                 ):
-                    print("[yellow]Warning:[/yellow] vLLM returned empty or all-null JSON")
+                    rich_print("[yellow]Warning:[/yellow] vLLM returned empty or all-null JSON")
 
-                return parsed_json
+                # Ensure return type matches Dict[str, Any]
+                if isinstance(parsed_json, dict):
+                    return cast(Dict[str, Any], parsed_json)
+                else:
+                    rich_print(
+                        "[yellow]Warning:[/yellow] Expected a JSON object; got non-dict. Returning empty dict."
+                    )
+                    return {}
             except json.JSONDecodeError as e:
-                print(f"[red]Error:[/red] Failed to parse vLLM response as JSON: {e}")
-                print(f"[yellow]Raw response:[/yellow] {raw_json}")
+                rich_print(f"[red]Error:[/red] Failed to parse vLLM response as JSON: {e}")
+                rich_print(f"[yellow]Raw response:[/yellow] {raw_json}")
                 return {}
 
         except Exception as e:
-            print(f"[red]Error:[/red] vLLM API call failed: {e}")
+            rich_print(f"[red]Error:[/red] vLLM API call failed: {e}")
             import traceback
 
             traceback.print_exc()

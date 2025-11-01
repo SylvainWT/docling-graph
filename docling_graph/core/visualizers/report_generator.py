@@ -1,7 +1,7 @@
 """Markdown report generator for graphs."""
 
 from pathlib import Path
-from typing import Optional
+from typing import Optional, cast
 
 import networkx as nx
 
@@ -59,7 +59,8 @@ class ReportGenerator:
 
     def validate_graph(self, graph: nx.DiGraph) -> bool:
         """Validate that graph is not empty."""
-        return graph.number_of_nodes() > 0
+        node_count = cast(int, graph.number_of_nodes())
+        return node_count > 0
 
     @staticmethod
     def _create_header() -> str:

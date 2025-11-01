@@ -2,11 +2,13 @@
 Factory for creating extractors based on configuration.
 """
 
-from rich import print
+from rich import print as rich_print
 
 from ...llm_clients.llm_base import BaseLlmClient
+from ...protocols import Backend
 from .backends.llm_backend import LlmBackend
 from .backends.vlm_backend import VlmBackend
+from .extractor_base import BaseExtractor
 from .strategies.many_to_one import ManyToOneStrategy
 from .strategies.one_to_one import OneToOneStrategy
 
@@ -18,10 +20,10 @@ class ExtractorFactory:
     def create_extractor(
         processing_mode: str,
         backend_type: str,
-        model_name: str = None,
-        llm_client: BaseLlmClient = None,
+        model_name: str | None = None,
+        llm_client: BaseLlmClient | None = None,
         docling_config: str = "ocr",
-    ):
+    ) -> BaseExtractor:
         """
         Create an extractor based on configuration.
 
@@ -35,12 +37,13 @@ class ExtractorFactory:
         Returns:
             BaseExtractor: Configured extractor instance.
         """
-        print("[blue][ExtractorFactory][/blue] Creating extractor:")
-        print(f"  Mode: [cyan]{processing_mode}[/cyan]")
-        print(f"  Type: [cyan]{backend_type}[/cyan]")
-        print(f"  Docling: [cyan]{docling_config}[/cyan]")
+        rich_print("[blue][ExtractorFactory][/blue] Creating extractor:")
+        rich_print(f"  Mode: [cyan]{processing_mode}[/cyan]")
+        rich_print(f"  Type: [cyan]{backend_type}[/cyan]")
+        rich_print(f"  Docling: [cyan]{docling_config}[/cyan]")
 
         # Create backend
+        backend: Backend
         if backend_type == "vlm":
             if not model_name:
                 raise ValueError("VLM requires model_name parameter")
@@ -53,6 +56,7 @@ class ExtractorFactory:
             raise ValueError(f"Unknown backend_type: {backend_type}")
 
         # Create strategy with docling_config
+        extractor: BaseExtractor
         if processing_mode == "one-to-one":
             extractor = OneToOneStrategy(backend=backend, docling_config=docling_config)
         elif processing_mode == "many-to-one":
@@ -60,7 +64,7 @@ class ExtractorFactory:
         else:
             raise ValueError(f"Unknown processing_mode: {processing_mode}")
 
-        print(
+        rich_print(
             f"[blue][ExtractorFactory][/blue] Created [green]{extractor.__class__.__name__}[/green]"
         )
         return extractor

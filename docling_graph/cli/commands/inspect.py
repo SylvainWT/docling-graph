@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Optional
 
 import typer
-from rich import print
+from rich import print as rich_print
 from typing_extensions import Annotated
 
 from ...core.visualizers.interactive_visualizer import InteractiveVisualizer
@@ -20,7 +20,7 @@ def inspect_command(
             exists=True,
         ),
     ],
-    format: Annotated[
+    input_format: Annotated[
         str, typer.Option("--format", "-f", help="Import format: 'csv' or 'json'.")
     ] = "csv",
     output: Annotated[
@@ -55,15 +55,17 @@ def inspect_command(
     """
 
     # Validate format
-    format = format.lower()
-    if format not in ["csv", "json"]:
-        print(f"[bold red]Error:[/bold red] Format must be 'csv' or 'json', got '{format}'")
+    input_format = input_format.lower()
+    if input_format not in ["csv", "json"]:
+        rich_print(
+            f"[bold red]Error:[/bold red] Format must be 'csv' or 'json', got '{input_format}'"
+        )
         raise typer.Exit(code=1)
 
     # Validate path based on format
-    if format == "csv":
+    if input_format == "csv":
         if not path.is_dir():
-            print(
+            rich_print(
                 "[bold red]Error:[/bold red] For CSV format, path must be a directory containing nodes.csv and edges.csv"
             )
             raise typer.Exit(code=1)
@@ -72,47 +74,47 @@ def inspect_command(
         edges_path = path / "edges.csv"
 
         if not nodes_path.exists():
-            print(f"[bold red]Error:[/bold red] nodes.csv not found in {path}")
+            rich_print(f"[bold red]Error:[/bold red] nodes.csv not found in {path}")
             raise typer.Exit(code=1)
 
         if not edges_path.exists():
-            print(f"[bold red]Error:[/bold red] edges.csv not found in {path}")
+            rich_print(f"[bold red]Error:[/bold red] edges.csv not found in {path}")
             raise typer.Exit(code=1)
 
-    elif format == "json":
+    elif input_format == "json":
         if not path.is_file() or path.suffix != ".json":
-            print("[bold red]Error:[/bold red] For JSON format, path must be a .json file")
+            rich_print("[bold red]Error:[/bold red] For JSON format, path must be a .json file")
             raise typer.Exit(code=1)
 
-    print("--- [blue]Starting Docling-Graph Inspection[/blue] ---")
-    print("\n[bold]Interactive Visualization[/bold]")
-    print(f"  Input: [cyan]{path}[/cyan]")
-    print(f"  Format: [cyan]{format}[/cyan]")
+    rich_print("--- [blue]Starting Docling-Graph Inspection[/blue] ---")
+    rich_print("\n[bold]Interactive Visualization[/bold]")
+    rich_print(f"  Input: [cyan]{path}[/cyan]")
+    rich_print(f"  Format: [cyan]{input_format}[/cyan]")
     if output:
-        print(f"  Output: [cyan]{output}[/cyan]")
+        rich_print(f"  Output: [cyan]{output}[/cyan]")
     else:
-        print("  Output: [cyan]temporary file[/cyan]")
+        rich_print("  Output: [cyan]temporary file[/cyan]")
 
     try:
         # Create visualizer
         visualizer = InteractiveVisualizer()
 
         # Load and visualize
-        print("\nLoading graph data...")
+        rich_print("\nLoading graph data...")
         visualizer.display_cytoscape_graph(
-            path=path, format=format, output_path=output, open_browser=open_browser
+            path=path, input_format=input_format, output_path=output, open_browser=open_browser
         )
 
-        print("--- [blue]Docling-Graph Inspection Finished Successfully[/blue] ---")
+        rich_print("--- [blue]Docling-Graph Inspection Finished Successfully[/blue] ---")
 
         if not open_browser:
-            print(
+            rich_print(
                 "\n[blue]Tip:[/blue] Open the HTML file in your browser to view the visualization"
             )
 
-    except Exception as e:
-        print(f"\n[bold red]Error:[/bold red] {e}")
+    except Exception as err:
+        rich_print(f"\n[bold red]Error:[/bold red] {err}")
         import traceback
 
         traceback.print_exc()
-        raise typer.Exit(code=1)
+        raise typer.Exit(code=1) from err

@@ -9,12 +9,12 @@ class BaseLlmClient(ABC):
     """
 
     @abstractmethod
-    def get_json_response(self, prompt: str, schema_json: str) -> Dict[str, Any]:
+    def get_json_response(self, prompt: str | dict[str, str], schema_json: str) -> Dict[str, Any]:
         """
         Executes the LLM call with the given prompt and schema.
 
         Args:
-            prompt (str): The full prompt to send to the model.
+            prompt (str | dict[str, str]): The full prompt to send to the model (legacy string or structured dict).
             schema_json (str): The Pydantic schema (for models that support it).
 
         Returns:

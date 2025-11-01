@@ -8,7 +8,7 @@ import json
 from typing import Optional, Type
 
 from pydantic import BaseModel, ValidationError
-from rich import print
+from rich import print as rich_print
 
 from ....llm_clients.llm_base import BaseLlmClient
 from ....llm_clients.prompts import get_prompt
@@ -17,7 +17,7 @@ from ....llm_clients.prompts import get_prompt
 class LlmBackend:
     """Backend for LLM-based extraction (local or API)."""
 
-    def __init__(self, llm_client: BaseLlmClient):
+    def __init__(self, llm_client: BaseLlmClient) -> None:
         """
         Initialize LLM backend with a client.
 
@@ -25,7 +25,7 @@ class LlmBackend:
             llm_client (BaseLlmClient): LLM client instance (Mistral, Ollama, etc.)
         """
         self.client = llm_client
-        print(
+        rich_print(
             f"[blue][LlmBackend][/blue] Initialized with client: [cyan]{self.client.__class__.__name__}[/cyan]"
         )
 
@@ -43,13 +43,13 @@ class LlmBackend:
         Returns:
             Optional[BaseModel]: Extracted and validated Pydantic model instance, or None if failed.
         """
-        print(
+        rich_print(
             f"[blue][LlmBackend][/blue] Extracting from {context} ([cyan]{len(markdown)}[/cyan] chars)"
         )
 
         # Validation for empty markdown
         if not markdown or len(markdown.strip()) == 0:
-            print(
+            rich_print(
                 f"[red]Error:[/red] Extracted markdown is empty for {context}. Cannot proceed with LLM extraction."
             )
             return None
@@ -67,34 +67,38 @@ class LlmBackend:
             parsed_json = self.client.get_json_response(prompt=prompt, schema_json=schema_json)
 
             if not parsed_json:
-                print(f"[yellow]Warning:[/yellow] No valid JSON returned from LLM for {context}")
+                rich_print(
+                    f"[yellow]Warning:[/yellow] No valid JSON returned from LLM for {context}"
+                )
                 return None
 
             # Use model_validate for proper Pydantic validation
             try:
                 validated_model = template.model_validate(parsed_json)
-                print(f"[blue][LlmBackend][/blue] Successfully extracted data from {context}")
+                rich_print(f"[blue][LlmBackend][/blue] Successfully extracted data from {context}")
                 return validated_model
 
             except ValidationError as e:
                 # Detailed error reporting
-                print(f"[blue][LlmBackend][/blue] [yellow]Validation Error for {context}:[/yellow]")
-                print("  The data extracted by the LLM does not match your Pydantic template.")
-                print("[red]Details:[/red]")
+                rich_print(
+                    f"[blue][LlmBackend][/blue] [yellow]Validation Error for {context}:[/yellow]"
+                )
+                rich_print("  The data extracted by the LLM does not match your Pydantic template.")
+                rich_print("[red]Details:[/red]")
                 for error in e.errors():
                     loc = " -> ".join(map(str, error["loc"]))
-                    print(f"  - [bold magenta]{loc}[/bold magenta]: [red]{error['msg']}[/red]")
-                print(f"\n[yellow]Extracted Data (raw):[/yellow]\n{parsed_json}\n")
+                    rich_print(f"  - [bold magenta]{loc}[/bold magenta]: [red]{error['msg']}[/red]")
+                rich_print(f"\n[yellow]Extracted Data (raw):[/yellow]\n{parsed_json}\n")
                 return None
 
         except Exception as e:
-            print(f"[red]Error during LLM extraction for {context}:[/red] {e}")
+            rich_print(f"[red]Error during LLM extraction for {context}:[/red] {e}")
             import traceback
 
             traceback.print_exc()
             return None
 
-    def cleanup(self):
+    def cleanup(self) -> None:
         """Clean up LLM client resources."""
         try:
             # Release the client reference
@@ -107,7 +111,7 @@ class LlmBackend:
             # Force garbage collection
             gc.collect()
 
-            print("[blue][LlmBackend][/blue] [green]Cleaned up resources[/green]")
+            rich_print("[blue][LlmBackend][/blue] [green]Cleaned up resources[/green]")
 
         except Exception as e:
-            print(f"[blue][LlmBackend][/blue] [yellow]Warning during cleanup:[/yellow] {e}")
+            rich_print(f"[blue][LlmBackend][/blue] [yellow]Warning during cleanup:[/yellow] {e}")

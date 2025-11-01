@@ -3,7 +3,7 @@ Shared document processing utilities.
 """
 
 import gc
-from typing import List
+from typing import Any, List
 
 from docling.datamodel import vlm_model_specs
 from docling.datamodel.accelerator_options import AcceleratorDevice, AcceleratorOptions
@@ -14,13 +14,14 @@ from docling.datamodel.pipeline_options import (
 )
 from docling.document_converter import DocumentConverter, PdfFormatOption
 from docling.pipeline.vlm_pipeline import VlmPipeline
-from rich import print
+from docling_core.types.doc import DoclingDocument
+from rich import print as rich_print
 
 
 class DocumentProcessor:
     """Handles document conversion to Markdown format."""
 
-    def __init__(self, docling_config: str = "ocr"):
+    def __init__(self, docling_config: str = "ocr") -> None:
         """
         Initialize document processor with specified pipeline.
 
@@ -43,7 +44,7 @@ class DocumentProcessor:
                     ),
                 }
             )
-            print(
+            rich_print(
                 "[blue][DocumentProcessor][/blue] Initialized with [magenta]VLM pipeline[/magenta]"
             )
         else:
@@ -63,11 +64,11 @@ class DocumentProcessor:
                     InputFormat.IMAGE: PdfFormatOption(pipeline_options=pipeline_options),
                 }
             )
-            print(
+            rich_print(
                 "[blue][DocumentProcessor][/blue] Initialized with [green]Classic OCR pipeline[/green] (French)"
             )
 
-    def convert_to_markdown(self, source: str):
+    def convert_to_markdown(self, source: str) -> DoclingDocument:
         """
         Converts a document to Docling's Document format.
 
@@ -77,14 +78,16 @@ class DocumentProcessor:
         Returns:
             Document: Docling document object.
         """
-        print(f"[blue][DocumentProcessor][/blue] Converting document: [yellow]{source}[/yellow]")
+        rich_print(
+            f"[blue][DocumentProcessor][/blue] Converting document: [yellow]{source}[/yellow]"
+        )
         result = self.converter.convert(source)
-        print(
+        rich_print(
             f"[blue][DocumentProcessor][/blue] Converted [cyan]{result.document.num_pages()}[/cyan] pages"
         )
         return result.document
 
-    def extract_page_markdowns(self, document) -> List[str]:
+    def extract_page_markdowns(self, document: DoclingDocument) -> List[str]:
         """
         Extracts Markdown content for each page.
 
@@ -101,12 +104,12 @@ class DocumentProcessor:
             md = document.export_to_markdown(page_no=page_no)
             page_markdowns.append(md)
 
-        print(
+        rich_print(
             f"[blue][DocumentProcessor][/blue] Extracted Markdown for [cyan]{len(page_markdowns)}[/cyan] pages"
         )
         return page_markdowns
 
-    def extract_full_markdown(self, document) -> str:
+    def extract_full_markdown(self, document: DoclingDocument) -> str:
         """
         Extracts the full document as a single Markdown string.
 
@@ -117,17 +120,19 @@ class DocumentProcessor:
             str: Complete document in Markdown format.
         """
         md = document.export_to_markdown()
-        print(
+        rich_print(
             f"[blue][DocumentProcessor][/blue] Extracted full document Markdown ([cyan]{len(md)}[/cyan] chars)"
         )
         return md
 
-    def cleanup(self):
+    def cleanup(self) -> None:
         """Clean up document converter resources."""
         try:
             if hasattr(self, "converter"):
                 del self.converter
             gc.collect()
-            print("[blue][DocumentProcessor][/blue] [green]Cleaned up resources[/green]")
+            rich_print("[blue][DocumentProcessor][/blue] [green]Cleaned up resources[/green]")
         except Exception as e:
-            print(f"[blue][DocumentProcessor][/blue] [yellow]Warning during cleanup:[/yellow] {e}")
+            rich_print(
+                f"[blue][DocumentProcessor][/blue] [yellow]Warning during cleanup:[/yellow] {e}"
+            )

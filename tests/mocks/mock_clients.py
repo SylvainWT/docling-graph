@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Optional
 class MockAPIClient:
     """Base mock API client."""
 
-    def __init__(self, api_key: str = "mock-api-key"):
+    def __init__(self, api_key: str = "mock-api-key") -> None:
         """Initialize mock API client.
 
         Args:
@@ -37,7 +37,7 @@ class MockAPIClient:
 class MockOpenAIClient:
     """Mock OpenAI API client."""
 
-    def __init__(self, api_key: str = "mock-openai-key"):
+    def __init__(self, api_key: str = "mock-openai-key") -> None:
         """Initialize mock OpenAI client.
 
         Args:
@@ -64,7 +64,7 @@ class MockOpenAIClient:
 class MockGeminiClient:
     """Mock Google Gemini API client."""
 
-    def __init__(self, api_key: str = "mock-gemini-key"):
+    def __init__(self, api_key: str = "mock-gemini-key") -> None:
         """Initialize mock Gemini client.
 
         Args:
@@ -93,7 +93,7 @@ class MockGeminiClient:
 class RateLimitedMockClient:
     """Mock client that simulates rate limiting."""
 
-    def __init__(self, rate_limit: int = 3):
+    def __init__(self, rate_limit: int = 3) -> None:
         """Initialize rate-limited mock client.
 
         Args:

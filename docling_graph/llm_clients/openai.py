@@ -6,11 +6,11 @@ Based on https://platform.openai.com/docs/guides/structured-outputs
 
 import json
 import os
-from typing import Any, Dict
+from typing import TYPE_CHECKING, Any, Dict, cast
 
 from dotenv import load_dotenv
 from openai import OpenAI
-from rich import print
+from rich import print as rich_print
 
 from .llm_base import BaseLlmClient
 
@@ -21,7 +21,7 @@ load_dotenv()
 class OpenAIClient(BaseLlmClient):
     """OpenAI API implementation with proper message structure."""
 
-    def __init__(self, model: str):
+    def __init__(self, model: str) -> None:
         self.model = model
         self.api_key = os.getenv("OPENAI_API_KEY")
 
@@ -45,7 +45,7 @@ class OpenAIClient(BaseLlmClient):
         }
 
         self._context_limit = model_context_limits.get(model, 128000)
-        print(f"[OpenAIClient] Initialized for [blue]{self.model}[/blue]")
+        rich_print(f"[OpenAIClient] Initialized for [blue]{self.model}[/blue]")
 
     def get_json_response(self, prompt: str | dict, schema_json: str) -> Dict[str, Any]:
         """
@@ -61,6 +61,10 @@ class OpenAIClient(BaseLlmClient):
             Parsed JSON response from OpenAI.
         """
         # Handle both legacy string prompts and new dict prompts
+        if TYPE_CHECKING:
+            from openai.types.chat import ChatCompletionMessageParam
+
+        messages: list[ChatCompletionMessageParam]
         if isinstance(prompt, dict):
             messages = [
                 {"role": "system", "content": prompt["system"]},
@@ -86,7 +90,7 @@ class OpenAIClient(BaseLlmClient):
             )
 
             # Extract the JSON content from the response
-            content = response.choices[0].message.content
+            content = response.choices[0].message.content or ""
 
             # Parse JSON
             try:
@@ -96,17 +100,23 @@ class OpenAIClient(BaseLlmClient):
                 if not parsed_json or (
                     isinstance(parsed_json, dict) and not any(parsed_json.values())
                 ):
-                    print("[yellow]Warning:[/yellow] OpenAI returned empty or all-null JSON")
+                    rich_print("[yellow]Warning:[/yellow] OpenAI returned empty or all-null JSON")
 
-                return parsed_json
+                if isinstance(parsed_json, dict):
+                    return cast(Dict[str, Any], parsed_json)
+                else:
+                    rich_print(
+                        "[yellow]Warning:[/yellow] Expected a JSON object; got non-dict. Returning empty dict."
+                    )
+                    return {}
 
             except json.JSONDecodeError as e:
-                print(f"[red]Error:[/red] Failed to parse OpenAI response as JSON: {e}")
-                print(f"[yellow]Raw response:[/yellow] {content}")
+                rich_print(f"[red]Error:[/red] Failed to parse OpenAI response as JSON: {e}")
+                rich_print(f"[yellow]Raw response:[/yellow] {content}")
                 return {}
 
         except Exception as e:
-            print(f"[red]Error:[/red] OpenAI API call failed: {e}")
+            rich_print(f"[red]Error:[/red] OpenAI API call failed: {e}")
             import traceback
 
             traceback.print_exc()

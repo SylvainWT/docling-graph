@@ -11,7 +11,7 @@ from typing import Any, Dict
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
-from rich import print
+from rich import print as rich_print
 
 from .llm_base import BaseLlmClient
 
@@ -22,7 +22,7 @@ load_dotenv()
 class GeminiClient(BaseLlmClient):
     """Google Gemini API implementation with proper JSON response format."""
 
-    def __init__(self, model: str):
+    def __init__(self, model: str) -> None:
         self.model = model
         self.api_key = os.getenv("GEMINI_API_KEY")
 
@@ -44,9 +44,9 @@ class GeminiClient(BaseLlmClient):
         }
 
         self._context_limit = model_context_limits.get(model, 1000000)
-        print(f"[GeminiClient] Initialized for [blue]{self.model}[/blue]")
+        rich_print(f"[GeminiClient] Initialized for [blue]{self.model}[/blue]")
 
-    def get_json_response(self, prompt: str | dict, schema_json: str) -> Dict[str, Any]:
+    def get_json_response(self, prompt: str | dict[str, str], schema_json: str) -> Dict[str, Any]:
         """
         Execute Gemini generate_content with JSON response mode.
 
@@ -83,23 +83,28 @@ class GeminiClient(BaseLlmClient):
 
             # Parse JSON
             try:
-                parsed_json = json.loads(response_text)
+                parsed: Any = json.loads(response_text)
+                # Normalize to a dict for return type consistency
+                if isinstance(parsed, dict):
+                    result: Dict[str, Any] = parsed
+                elif isinstance(parsed, list):
+                    result = {"result": parsed}
+                else:
+                    result = {"value": parsed}
 
                 # Validate it's not empty
-                if not parsed_json or (
-                    isinstance(parsed_json, dict) and not any(parsed_json.values())
-                ):
-                    print("[yellow]Warning:[/yellow] Gemini returned empty or all-null JSON")
+                if not result or (isinstance(result, dict) and not any(result.values())):
+                    rich_print("[yellow]Warning:[/yellow] Gemini returned empty or all-null JSON")
 
-                return parsed_json
+                return result
 
             except json.JSONDecodeError as e:
-                print(f"[red]Error:[/red] Failed to parse Gemini response as JSON: {e}")
-                print(f"[yellow]Raw response:[/yellow] {response_text}")
+                rich_print(f"[red]Error:[/red] Failed to parse Gemini response as JSON: {e}")
+                rich_print(f"[yellow]Raw response:[/yellow] {response_text}")
                 return {}
 
         except Exception as e:
-            print(f"[red]Error:[/red] Gemini API call failed: {e}")
+            rich_print(f"[red]Error:[/red] Gemini API call failed: {e}")
             import traceback
 
             traceback.print_exc()

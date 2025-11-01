@@ -3,11 +3,11 @@ Configuration loading and validation utilities.
 """
 
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, cast
 
 import typer
 import yaml
-from rich import print
+from rich import print as rich_print
 
 from .constants import CONFIG_FILE_NAME
 
@@ -24,16 +24,22 @@ def load_config() -> Dict[str, Any]:
     config_path = Path.cwd() / CONFIG_FILE_NAME
 
     if not config_path.exists():
-        print(f"[red]Error:[/red] Configuration file '{CONFIG_FILE_NAME}' not found.")
-        print("Please run [cyan]docling-graph init[/cyan] first.")
+        rich_print(f"[red]Error:[/red] Configuration file '{CONFIG_FILE_NAME}' not found.")
+        rich_print("Please run [cyan]docling-graph init[/cyan] first.")
         raise typer.Exit(code=1)
 
     try:
         with open(config_path) as f:
-            return yaml.safe_load(f)
-    except yaml.YAMLError as e:
-        print(f"[red]Error parsing '{CONFIG_FILE_NAME}':[/red] {e}")
-        raise typer.Exit(code=1)
+            data = yaml.safe_load(f)
+            if not isinstance(data, dict):
+                rich_print(
+                    f"[red]Error:[/red] Configuration file '{CONFIG_FILE_NAME}' must contain a mapping at the top level."
+                )
+                raise typer.Exit(code=1)
+            return cast(Dict[str, Any], data)
+    except yaml.YAMLError as err:
+        rich_print(f"[red]Error parsing '{CONFIG_FILE_NAME}':[/red] {err}")
+        raise typer.Exit(code=1) from err
 
 
 def save_config(config_dict: Dict[str, Any], output_path: Path) -> None:
@@ -64,11 +70,12 @@ def get_config_value(config: Dict[str, Any], *keys: str, default: Any = None) ->
     Example:
         >>> get_config_value(config, "models", "llm", "local", "default_model")
     """
-    current = config
+    current: Any = config
     for key in keys:
         if not isinstance(current, dict):
             return default
-        current = current.get(key)
-        if current is None:
+        next_val = current.get(key)
+        if next_val is None:
             return default
+        current = next_val
     return current

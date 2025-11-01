@@ -9,7 +9,7 @@ from typing import List, Optional
 class MockDocumentProcessor:
     """Mock document processor for testing."""
 
-    def __init__(self, docling_config: str = "ocr"):
+    def __init__(self, docling_config: str = "ocr") -> None:
         """Initialize mock document processor.
 
         Args:
@@ -66,7 +66,9 @@ class MockDocumentProcessor:
 class ConfigurableMockProcessor:
     """Configurable mock processor for advanced testing."""
 
-    def __init__(self, page_contents: Optional[List[str]] = None, should_fail: bool = False):
+    def __init__(
+        self, page_contents: Optional[List[str]] = None, should_fail: bool = False
+    ) -> None:
         """Initialize configurable mock processor.
 
         Args:
@@ -109,7 +111,7 @@ class ConfigurableMockProcessor:
 class SlowMockProcessor:
     """Mock processor that simulates slow processing."""
 
-    def __init__(self, delay_per_page: float = 0.1):
+    def __init__(self, delay_per_page: float = 0.1) -> None:
         """Initialize slow mock processor.
 
         Args:
@@ -147,7 +149,7 @@ class SlowMockProcessor:
 class EmptyMockProcessor:
     """Mock processor that returns empty results."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize empty mock processor."""
         self.call_count = 0
 
@@ -170,7 +172,7 @@ class EmptyMockProcessor:
 class MultiPageMockProcessor:
     """Mock processor that returns specific number of pages."""
 
-    def __init__(self, num_pages: int = 3):
+    def __init__(self, num_pages: int = 3) -> None:
         """Initialize multi-page mock processor.
 
         Args:

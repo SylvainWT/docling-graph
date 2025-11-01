@@ -14,7 +14,7 @@ from typing import Any, List, Optional, Set, Type
 
 import networkx as nx
 from pydantic import BaseModel
-from rich import print
+from rich import print as rich_print
 
 from ..utils.graph_stats import calculate_graph_stats
 from .config import GraphConfig
@@ -33,7 +33,7 @@ class GraphConverter:
         config: Optional[GraphConfig] = None,
         add_reverse_edges: bool = False,
         validate_graph: bool = True,
-    ):
+    ) -> None:
         """Initialize the graph converter.
 
         Args:
@@ -106,7 +106,7 @@ class GraphConverter:
             Serialized value safe for NetworkX attributes.
         """
         # Handle date/time objects
-        if isinstance(value, (date, datetime)):
+        if isinstance(value, date | datetime):
             return value.isoformat()
         if isinstance(value, time):
             return value.isoformat()
@@ -122,7 +122,7 @@ class GraphConverter:
             return value.model_dump()
 
         # Handle collections
-        if isinstance(value, (list, tuple, set)):
+        if isinstance(value, list | tuple | set):
             return [self._serialize_value(item) for item in value]
         if isinstance(value, dict):
             return {k: self._serialize_value(v) for k, v in value.items()}
@@ -130,7 +130,7 @@ class GraphConverter:
         # Handle strings (truncate if too long)
         if isinstance(value, str):
             if len(value) > self.config.MAX_STRING_LENGTH:
-                print(
+                rich_print(
                     f"[yellow][!] Truncating string from {len(value)} "
                     f"to {self.config.MAX_STRING_LENGTH} chars[/yellow]"
                 )
@@ -138,11 +138,11 @@ class GraphConverter:
             return value
 
         # Default: convert complex objects to string safely
-        if not isinstance(value, (int, float, bool, type(None))):
+        if not isinstance(value, int | float | bool | type(None)):
             try:
                 return str(value)
             except Exception as e:
-                print(
+                rich_print(
                     f"[red][GraphConverter] Serialization failed for object of type[/red]"
                     f"{type(value).__name__}: {e}"
                 )
@@ -167,9 +167,15 @@ class GraphConverter:
 
         # Check for graph_id_fields in model config
         if hasattr(model_config, "get"):
-            id_fields = model_config.get("graph_id_fields", [])
+            id_fields_raw = model_config.get("graph_id_fields", [])
         else:
-            id_fields = getattr(model_config, "graph_id_fields", [])
+            id_fields_raw = getattr(model_config, "graph_id_fields", [])
+
+        # Normalize id_fields to a list of strings for safe iteration
+        if isinstance(id_fields_raw, list | tuple | set):
+            id_fields = [str(f) for f in id_fields_raw]
+        else:
+            id_fields = []
 
         # Determine what to hash
         if id_fields:
@@ -236,7 +242,7 @@ class GraphConverter:
                     # It's a list of simple types (strings, numbers, etc.) - include it
                     node_data[field_name] = self._serialize_value(field_value)
             # Skip dicts and BaseModel instances (they become edges)
-            elif isinstance(field_value, (dict, BaseModel)):
+            elif isinstance(field_value, dict | BaseModel):
                 continue
             else:
                 # Simple field - add it
@@ -245,7 +251,7 @@ class GraphConverter:
         graph.add_node(node_id, **node_data)
 
         # Recursively process nested models
-        for field_name, field_value in model_instance:
+        for _field_name, field_value in model_instance:
             if isinstance(field_value, BaseModel):
                 self._create_nodes_pass(field_value, graph, visited_ids)
             elif isinstance(field_value, list):
@@ -334,17 +340,17 @@ class GraphConverter:
 
         # Report errors with rich formatting if found
         if invalid_edges:
-            print("[red][GraphConverter] Graph validation failed![/red]")
+            rich_print("[red][GraphConverter] Graph validation failed![/red]")
 
             # Show first 5 invalid edges
             for source, target, issue_type in invalid_edges[:5]:
-                print(
+                rich_print(
                     f"[red]  • Invalid edge: {source} -> {target} "
                     f"({issue_type} node not found)[/red]"
                 )
 
             # Indicate if there are more
             if len(invalid_edges) > 5:
-                print(f"[red]  • ... and {len(invalid_edges) - 5} more invalid edges[/red]")
+                rich_print(f"[red]  • ... and {len(invalid_edges) - 5} more invalid edges[/red]")
 
             raise ValueError(f"Graph validation failed: {len(invalid_edges)} invalid edge(s) found")

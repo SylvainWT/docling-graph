@@ -12,13 +12,13 @@ from docling.datamodel.base_models import InputFormat
 from docling.document_extractor import DocumentExtractor, ExtractionFormatOption
 from docling.pipeline.extraction_vlm_pipeline import ExtractionVlmPipeline
 from pydantic import BaseModel, ValidationError
-from rich import print
+from rich import print as rich_print
 
 
 class VlmBackend:
     """Backend for VLM-based extraction (local only)."""
 
-    def __init__(self, model_name: str):
+    def __init__(self, model_name: str) -> None:
         """
         Initialize VLM backend with specified model.
 
@@ -28,12 +28,15 @@ class VlmBackend:
         self.model_name = model_name
         self._initialize_extractor()
 
-    def _initialize_extractor(self):
+    def _initialize_extractor(self) -> None:
         """Initialize Docling's VLM extractor with custom settings."""
         try:
             # Get default VLM pipeline options
             pipeline_options = ExtractionVlmPipeline.get_default_options()
-            pipeline_options.vlm_options.repo_id = self.model_name
+            # Use getattr guards to avoid static typing issues with mypy
+            vlm_opts = getattr(pipeline_options, "vlm_options", None)
+            if vlm_opts is not None and hasattr(vlm_opts, "repo_id"):
+                vlm_opts.repo_id = self.model_name
 
             # Define custom format options - MUST include backend parameter
             custom_format_options = {
@@ -55,12 +58,12 @@ class VlmBackend:
                 extraction_format_options=custom_format_options,
             )
 
-            print(
+            rich_print(
                 f"[blue][VlmBackend][/blue] Initialized with model: [cyan]{self.model_name}[/cyan]"
             )
 
         except Exception as e:
-            print(f"[red]Error initializing VLM backend:[/red] {e}")
+            rich_print(f"[red]Error initializing VLM backend:[/red] {e}")
             raise
 
     def extract_from_document(self, source: str, template: Type[BaseModel]) -> List[BaseModel]:
@@ -74,7 +77,7 @@ class VlmBackend:
         Returns:
             List[BaseModel]: List of extracted model instances (one per page/item).
         """
-        print(f"[blue][VlmBackend][/blue] Extracting from: [yellow]{source}[/yellow]")
+        rich_print(f"[blue][VlmBackend][/blue] Extracting from: [yellow]{source}[/yellow]")
 
         try:
             # Extract using VLM
@@ -92,40 +95,42 @@ class VlmBackend:
                             extracted_objects.append(validated_model)
                         except ValidationError as e:
                             # Detailed error reporting like your original code
-                            print(
+                            rich_print(
                                 f"[blue][VlmBackend][/blue] [yellow]Validation Error on page {page_num}:[/yellow]"
                             )
-                            print(
+                            rich_print(
                                 "  The data extracted by the VLM does not match your Pydantic template."
                             )
-                            print("[red]Details:[/red]")
+                            rich_print("[red]Details:[/red]")
                             for error in e.errors():
                                 loc = " -> ".join(map(str, error["loc"]))
-                                print(
+                                rich_print(
                                     f"  - [bold magenta]{loc}[/bold magenta]: [red]{error['msg']}[/red]"
                                 )
-                            print(
+                            rich_print(
                                 f"\n[yellow]Extracted Data (raw):[/yellow]\n{page.extracted_data}\n"
                             )
                             continue
 
             if extracted_objects:
-                print(
+                rich_print(
                     f"[blue][VlmBackend][/blue] Extracted [green]{len(extracted_objects)}[/green] valid items"
                 )
             else:
-                print("[blue][VlmBackend][/blue] [yellow]Warning:[/yellow] No valid data extracted")
+                rich_print(
+                    "[blue][VlmBackend][/blue] [yellow]Warning:[/yellow] No valid data extracted"
+                )
 
             return extracted_objects
 
         except Exception as e:
-            print(f"[red]Error during VLM extraction:[/red] {e}")
+            rich_print(f"[red]Error during VLM extraction:[/red] {e}")
             import traceback
 
             traceback.print_exc()
             return []
 
-    def cleanup(self):
+    def cleanup(self) -> None:
         """Clean up GPU memory and release resources."""
         try:
             # Delete the extractor to release document objects
@@ -140,7 +145,9 @@ class VlmBackend:
                 torch.cuda.empty_cache()
                 torch.cuda.synchronize()
 
-            print("[blue][VlmBackend][/blue] [green]Cleaned up resources and GPU memory[/green]")
+            rich_print(
+                "[blue][VlmBackend][/blue] [green]Cleaned up resources and GPU memory[/green]"
+            )
 
         except Exception as e:
-            print(f"[blue][VlmBackend][/blue] [yellow]Warning during cleanup:[/yellow] {e}")
+            rich_print(f"[blue][VlmBackend][/blue] [yellow]Warning during cleanup:[/yellow] {e}")

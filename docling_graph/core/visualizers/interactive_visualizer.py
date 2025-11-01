@@ -7,12 +7,12 @@ import os
 import webbrowser
 from collections import Counter
 from pathlib import Path
-from typing import Literal, Optional, Tuple
+from typing import Any, Optional, Tuple
 
 import networkx as nx
 import numpy as np
 import pandas as pd
-from rich import print
+from rich import print as rich_print
 
 
 class InteractiveVisualizer:
@@ -34,10 +34,10 @@ class InteractiveVisualizer:
         nodes_path = path / "nodes.csv"
         edges_path = path / "edges.csv"
 
-        print(f"Loading nodes from {nodes_path}...")
+        rich_print(f"Loading nodes from {nodes_path}...")
         nodes_df = pd.read_csv(nodes_path)
 
-        print(f"Loading edges from {edges_path}...")
+        rich_print(f"Loading edges from {edges_path}...")
         edges_df = pd.read_csv(edges_path)
 
         return nodes_df, edges_df
@@ -52,7 +52,7 @@ class InteractiveVisualizer:
         Returns:
             Tuple of (nodes_df, edges_df)
         """
-        print(f"Loading graph from {path}...")
+        rich_print(f"Loading graph from {path}...")
         with open(path, encoding="utf-8") as f:
             data = json.load(f)
 
@@ -68,7 +68,7 @@ class InteractiveVisualizer:
         # 1) plural 'labels' column (array or delimited string)
         if "labels" in row and self._is_valid_value(row["labels"]):
             v = row["labels"]
-            if isinstance(v, (list, tuple, set)):
+            if isinstance(v, list | tuple | set):
                 return [str(x) for x in v if str(x)]
             if isinstance(v, str):
                 # split common delimiters
@@ -87,13 +87,13 @@ class InteractiveVisualizer:
         return ["Unknown"]
 
     def _compute_node_type_counts(self, nodes_df: pd.DataFrame) -> dict:
-        counts = Counter()
+        counts: Counter[str] = Counter()
         for _, r in nodes_df.iterrows():
             for lab in self._extract_labels_for_count(r):
                 counts[lab] += 1
         return dict(counts)
 
-    def _is_valid_value(self, value) -> bool:
+    def _is_valid_value(self, value: Any) -> bool:
         """
         Check if a value is valid (not NaN, None, or empty).
         Handles scalars, arrays, and lists properly.
@@ -103,7 +103,7 @@ class InteractiveVisualizer:
             return False
 
         # Handle numpy arrays and lists
-        if isinstance(value, (list, np.ndarray)):
+        if isinstance(value, list | np.ndarray):
             return len(value) > 0
 
         # Handle pandas NA types
@@ -116,13 +116,13 @@ class InteractiveVisualizer:
 
         return True
 
-    def _serialize_value(self, value):
+    def _serialize_value(self, value: Any) -> Any:
         """
         Convert a value to a JSON-serializable format.
         Handles numpy types, lists, and other complex types.
         """
         # Handle None and NaN
-        if value is None or (not isinstance(value, (list, np.ndarray)) and pd.isna(value)):
+        if value is None or (not isinstance(value, list | np.ndarray) and pd.isna(value)):
             return None
 
         # Handle numpy types
@@ -130,7 +130,7 @@ class InteractiveVisualizer:
             return value.item()
 
         # Handle lists and arrays
-        if isinstance(value, (list, np.ndarray)):
+        if isinstance(value, list | np.ndarray):
             return [self._serialize_value(v) for v in value]
 
         # Handle dicts
@@ -196,23 +196,23 @@ class InteractiveVisualizer:
     def display_cytoscape_graph(
         self,
         path: Path,
-        format: Literal["csv", "json"] = "csv",
+        input_format: str = "csv",
         output_path: Optional[Path] = None,
         open_browser: bool = True,
     ) -> Path:
         """Load graph data from file and visualize with Cytoscape in the browser."""
         # Load data
-        if format == "csv":
+        if input_format == "csv":
             nodes_df, edges_df = self.load_csv(path)
-        elif format == "json":
+        elif input_format == "json":
             nodes_df, edges_df = self.load_json(path)
         else:
-            raise ValueError(f"Unsupported format: {format}")
+            raise ValueError(f"Unsupported format: {input_format}")
 
         return self._prepare_and_visualize(nodes_df, edges_df, output_path, open_browser)
 
     def save_cytoscape_graph(
-        self, graph: nx.DiGraph, output_path: Path, open_browser: bool = False, **kwargs
+        self, graph: nx.DiGraph, output_path: Path, open_browser: bool = False, **kwargs: Any
     ) -> Path:
         """Visualize a NetworkX graph using Cytoscape."""
         # Convert NetworkX graph to DataFrames
@@ -273,7 +273,7 @@ class InteractiveVisualizer:
                 html_template = f.read()
         else:
             # Fallback: use inline template (minimal version)
-            print(
+            rich_print(
                 "[yellow][InteractiveVisualizer][/yellow] HTML template missing - Falling back to minimal version instead"
             )
             html_template = self._get_default_template()

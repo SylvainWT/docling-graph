@@ -81,7 +81,7 @@ class TestGraphConverterNodeGeneration:
         converter = GraphConverter()
         graph, _ = converter.pydantic_list_to_graph([sample_person])
 
-        node_id = list(graph.nodes())[0]
+        node_id = next(iter(graph.nodes()))
         node_data = graph.nodes[node_id]
 
         assert node_data["label"] == "Person"
@@ -94,10 +94,10 @@ class TestGraphConverterNodeGeneration:
         converter = GraphConverter()
 
         graph1, _ = converter.pydantic_list_to_graph([sample_person])
-        node_id_1 = list(graph1.nodes())[0]
+        node_id_1 = next(iter(graph1.nodes()))
 
         graph2, _ = converter.pydantic_list_to_graph([sample_person])
-        node_id_2 = list(graph2.nodes())[0]
+        node_id_2 = next(iter(graph2.nodes()))
 
         assert node_id_1 == node_id_2
 
@@ -160,7 +160,7 @@ class TestGraphConverterThreadSafety:
         """Test that same converter can be used concurrently."""
         converter = GraphConverter()
 
-        def convert_batch(models):
+        def convert_batch(models) -> int:
             graph, metadata = converter.pydantic_list_to_graph(models)
             return metadata.node_count
 
@@ -194,7 +194,7 @@ class TestGraphConverterThreadSafety:
         # Graphs should be independent
         assert len(graph1.nodes) == 1
         assert len(graph2.nodes) == 1
-        assert list(graph1.nodes())[0] != list(graph2.nodes())[0]
+        assert next(iter(graph1.nodes())) != next(iter(graph2.nodes()))
 
 
 class TestGraphConverterValueSerialization:
@@ -208,7 +208,7 @@ class TestGraphConverterValueSerialization:
         converter = GraphConverter()
         graph, _ = converter.pydantic_list_to_graph([person])
 
-        node_id = list(graph.nodes())[0]
+        node_id = next(iter(graph.nodes()))
         assert graph.nodes[node_id]["name"] == "John"
 
     def test_serialize_long_strings_truncated(self):
@@ -221,7 +221,7 @@ class TestGraphConverterValueSerialization:
         converter = GraphConverter()
         graph, _ = converter.pydantic_list_to_graph([person])
 
-        node_id = list(graph.nodes())[0]
+        node_id = next(iter(graph.nodes()))
         serialized_name = graph.nodes[node_id]["name"]
 
         # Should be truncated
@@ -236,7 +236,7 @@ class TestGraphConverterValueSerialization:
         converter = GraphConverter()
         graph, _ = converter.pydantic_list_to_graph([person])
 
-        node_id = list(graph.nodes())[0]
+        node_id = next(iter(graph.nodes()))
         assert graph.nodes[node_id]["age"] == 30
         assert isinstance(graph.nodes[node_id]["age"], int)
 
@@ -252,7 +252,7 @@ class TestGraphConverterNodeIDGeneration:
         converter = GraphConverter()
         graph, _ = converter.pydantic_list_to_graph([person])
 
-        node_id = list(graph.nodes())[0]
+        node_id = next(iter(graph.nodes()))
 
         # Should use email as ID (from graph_id_fields)
         assert node_id.startswith("Person_")  # Hash-based ID
@@ -265,7 +265,7 @@ class TestGraphConverterNodeIDGeneration:
         converter = GraphConverter()
         graph, _ = converter.pydantic_list_to_graph([address])
 
-        node_id = list(graph.nodes())[0]
+        node_id = next(iter(graph.nodes()))
 
         # Should have hash-based ID
         assert "Address_" in node_id

@@ -10,7 +10,7 @@ from pydantic import BaseModel
 class MockLLMBackend:
     """Mock LLM backend for testing."""
 
-    def __init__(self, model_name: str = "mock-llm"):
+    def __init__(self, model_name: str = "mock-llm") -> None:
         """Initialize mock LLM backend.
 
         Args:
@@ -38,15 +38,15 @@ class MockLLMBackend:
         for field_name, field_info in template.model_fields.items():
             # Generate appropriate mock data based on field type
             field_type = field_info.annotation
-            if field_type == str:
+            if field_type is str:
                 mock_data[field_name] = f"mock_{field_name}"
-            elif field_type == int:
+            elif field_type is int:
                 mock_data[field_name] = 42
-            elif field_type == float:
+            elif field_type is float:
                 mock_data[field_name] = 3.14
-            elif field_type == bool:
+            elif field_type is bool:
                 mock_data[field_name] = True
-            elif field_type == list:
+            elif field_type is list:
                 mock_data[field_name] = []
             else:
                 mock_data[field_name] = None
@@ -62,7 +62,7 @@ class MockLLMBackend:
 class MockVLMBackend:
     """Mock VLM (Vision Language Model) backend for testing."""
 
-    def __init__(self, model_name: str = "mock-vlm"):
+    def __init__(self, model_name: str = "mock-vlm") -> None:
         """Initialize mock VLM backend.
 
         Args:
@@ -119,15 +119,15 @@ class MockVLMBackend:
         mock_data = {}
         for field_name, field_info in template.model_fields.items():
             field_type = field_info.annotation
-            if field_type == str:
+            if field_type is str:
                 mock_data[field_name] = f"mock_{field_name}"
-            elif field_type == int:
+            elif field_type is int:
                 mock_data[field_name] = 99
-            elif field_type == float:
+            elif field_type is float:
                 mock_data[field_name] = 2.71
-            elif field_type == bool:
+            elif field_type is bool:
                 mock_data[field_name] = False
-            elif field_type == list:
+            elif field_type is list:
                 mock_data[field_name] = []
             else:
                 mock_data[field_name] = None
@@ -144,7 +144,7 @@ class MockVLMBackend:
 class MockOllamaClient:
     """Mock Ollama client for testing."""
 
-    def __init__(self, model: str = "llama3:8b"):
+    def __init__(self, model: str = "llama3:8b") -> None:
         """Initialize mock Ollama client.
 
         Args:
@@ -186,7 +186,7 @@ class MockOllamaClient:
 class MockMistralClient:
     """Mock Mistral API client for testing."""
 
-    def __init__(self, api_key: str = "mock-key"):
+    def __init__(self, api_key: str = "mock-key") -> None:
         """Initialize mock Mistral client.
 
         Args:
@@ -236,7 +236,7 @@ class MockMistralClient:
 class ConfigurableMockBackend:
     """Configurable mock backend for advanced testing."""
 
-    def __init__(self, responses: List[Dict[str, Any]] = None):
+    def __init__(self, responses: list[Dict[str, Any]] | None = None) -> None:
         """Initialize configurable mock.
 
         Args:
@@ -278,7 +278,7 @@ class ConfigurableMockBackend:
 class FailingMockBackend:
     """Mock backend that simulates failures."""
 
-    def __init__(self, failure_mode: str = "exception"):
+    def __init__(self, failure_mode: str = "exception") -> None:
         """Initialize failing mock.
 
         Args:

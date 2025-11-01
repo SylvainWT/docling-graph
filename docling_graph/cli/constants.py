@@ -2,7 +2,7 @@
 CLI constants and configuration values.
 """
 
-from typing import Final
+from typing import Any, Final
 
 # Configuration
 CONFIG_FILE_NAME: Final[str] = "config.yaml"
@@ -32,7 +32,7 @@ DEFAULT_DOCLING_CONFIG = {
 }
 
 # Default model configurations
-DEFAULT_MODELS = {
+DEFAULT_MODELS: Final[dict[str, Any]] = {
     "vlm": "numind/NuExtract-2.0-8B",
     "llm_local": "llama-3.1-8b",
     "llm_remote": {

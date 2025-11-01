@@ -5,26 +5,31 @@ Based on https://ollama.com/blog/structured-outputs
 """
 
 import json
-from typing import Any, Dict
+from typing import Any, Dict, cast
 
-from rich import print
+from rich import print as rich_print
 
 from .llm_base import BaseLlmClient
 
 # Requires `pip install ollama`
+# Make the lazy import optional to satisfy type checkers when assigning None
+_ollama: Any | None = None
 try:
-    import ollama
+    import ollama as _ollama
 except ImportError:
-    print(
+    rich_print(
         "[red]Error:[/red] `ollama` package not found. Please run `pip install ollama` to use local LLMs."
     )
-    ollama = None
+    _ollama = None
+
+# Expose as Any to allow None fallback without mypy issues
+ollama: Any = _ollama
 
 
 class OllamaClient(BaseLlmClient):
     """Ollama (local LLM) implementation with proper message structure."""
 
-    def __init__(self, model: str):
+    def __init__(self, model: str) -> None:
         if ollama is None:
             raise ImportError(
                 "Ollama client could not be imported. Please install it with: pip install ollama"
@@ -40,14 +45,14 @@ class OllamaClient(BaseLlmClient):
         self._context_limit = model_context_limits.get(base_model, 8000)
 
         try:
-            print(f"[OllamaClient] Checking Ollama connection and model '{self.model}'...")
+            rich_print(f"[OllamaClient] Checking Ollama connection and model '{self.model}'...")
             ollama.show(self.model)
-            print(f"[OllamaClient] Initialized with Ollama model: [blue]{self.model}[/blue]")
+            rich_print(f"[OllamaClient] Initialized with Ollama model: [blue]{self.model}[/blue]")
         except Exception as e:
-            print(f"[red]Ollama connection error:[/red] {e}")
-            print("Please ensure:")
-            print("  1. Ollama is running: ollama serve")
-            print(f"  2. Model is available: ollama pull {self.model}")
+            rich_print(f"[red]Ollama connection error:[/red] {e}")
+            rich_print("Please ensure:")
+            rich_print("  1. Ollama is running: ollama serve")
+            rich_print(f"  2. Model is available: ollama pull {self.model}")
             raise
 
     def get_json_response(self, prompt: str | dict, schema_json: str) -> Dict[str, Any]:
@@ -89,23 +94,28 @@ class OllamaClient(BaseLlmClient):
 
             # Parse JSON
             try:
-                parsed_json = json.loads(raw_json)
+                parsed = json.loads(raw_json)
 
                 # Validate it's not empty
-                if not parsed_json or (
-                    isinstance(parsed_json, dict) and not any(parsed_json.values())
-                ):
-                    print("[yellow]Warning:[/yellow] Ollama returned empty or all-null JSON")
+                if not parsed or (isinstance(parsed, dict) and not any(parsed.values())):
+                    rich_print("[yellow]Warning:[/yellow] Ollama returned empty or all-null JSON")
 
-                return parsed_json
+                # Ensure return type matches Dict[str, Any]
+                if isinstance(parsed, dict):
+                    return cast(Dict[str, Any], parsed)
+                else:
+                    rich_print(
+                        "[yellow]Warning:[/yellow] Expected a JSON object; got non-dict. Returning empty dict."
+                    )
+                    return {}
 
             except json.JSONDecodeError as e:
-                print(f"[red]Error:[/red] Failed to parse Ollama response as JSON: {e}")
-                print(f"[yellow]Raw response:[/yellow] {raw_json}")
+                rich_print(f"[red]Error:[/red] Failed to parse Ollama response as JSON: {e}")
+                rich_print(f"[yellow]Raw response:[/yellow] {raw_json}")
                 return {}
 
         except Exception as e:
-            print(f"[red]Error:[/red] Ollama API call failed: {e}")
+            rich_print(f"[red]Error:[/red] Ollama API call failed: {e}")
             import traceback
 
             traceback.print_exc()

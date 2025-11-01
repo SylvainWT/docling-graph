@@ -4,13 +4,14 @@ import json
 from pathlib import Path
 from typing import Optional
 
-from rich import print
+from docling_core.types.doc import DoclingDocument
+from rich import print as rich_print
 
 
 class DoclingExporter:
     """Export Docling documents and markdown to output directory."""
 
-    def __init__(self, output_dir: Optional[Path] = None):
+    def __init__(self, output_dir: Optional[Path] = None) -> None:
         """Initialize Docling exporter.
 
         Args:
@@ -20,12 +21,12 @@ class DoclingExporter:
 
     def export_document(
         self,
-        document,
+        document: DoclingDocument,
         base_name: str,
         include_json: bool = True,
         include_markdown: bool = True,
         per_page: bool = False,
-    ) -> dict:
+    ) -> dict[str, str | list[str]]:
         """Export Docling document and markdown.
 
         Args:
@@ -40,14 +41,14 @@ class DoclingExporter:
         """
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
-        exported_files = {}
+        exported_files: dict[str, str | list[str]] = {}
 
         # Export document as JSON
         if include_json:
             json_path = self.output_dir / f"{base_name}_docling.json"
             self._export_document_json(document, json_path)
             exported_files["document_json"] = str(json_path)
-            print(f"[green]→[/green] Saved Docling document to [green]{json_path}[/green]")
+            rich_print(f"[green]→[/green] Saved Docling document to [green]{json_path}[/green]")
 
         # Export full markdown
         if include_markdown:
@@ -55,7 +56,7 @@ class DoclingExporter:
             full_markdown = document.export_to_markdown()
             self._save_text(full_markdown, md_path)
             exported_files["markdown"] = str(md_path)
-            print(f"[green]→[/green] Saved full markdown to [green]{md_path}[/green]")
+            rich_print(f"[green]→[/green] Saved full markdown to [green]{md_path}[/green]")
 
         # Export per-page markdown
         if per_page:
@@ -70,13 +71,13 @@ class DoclingExporter:
                 page_files.append(str(page_path))
 
             exported_files["page_markdowns"] = page_files
-            print(
+            rich_print(
                 f"[green]→[/green] Saved {len(page_files)} page markdown files to [green]{page_dir}[/green]"
             )
 
         return exported_files
 
-    def _export_document_json(self, document, output_path: Path) -> None:
+    def _export_document_json(self, document: DoclingDocument, output_path: Path) -> None:
         """Export Docling document to JSON format.
 
         Args:

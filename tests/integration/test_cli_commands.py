@@ -154,7 +154,7 @@ class TestConvertCommand:
 
             # Verify processing mode was passed to pipeline
             if result.exit_code == 0:
-                call_args = mock_pipeline.call_args
+                _ = mock_pipeline.call_args
                 # Check that processing_mode was passed
 
     def test_convert_with_backend_type_option(self, temp_dir):
@@ -163,7 +163,7 @@ class TestConvertCommand:
         test_file.write_bytes(b"test")
 
         with patch("docling_graph.cli.commands.convert.run_pipeline"):
-            result = runner.invoke(
+            _ = runner.invoke(
                 app,
                 [
                     "convert",
@@ -182,8 +182,8 @@ class TestConvertCommand:
         test_file = temp_dir / "test.pdf"
         test_file.write_bytes(b"test")
 
-        with patch("docling_graph.cli.commands.convert.run_pipeline") as mock_pipeline:
-            result = runner.invoke(
+        with patch("docling_graph.cli.commands.convert.run_pipeline"):
+            _ = runner.invoke(
                 app,
                 [
                     "convert",

@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Optional
 
 import typer
-from rich import print
+from rich import print as rich_print
 from typing_extensions import Annotated
 
 sys.path.append(str(Path.cwd()))
@@ -95,9 +95,9 @@ def convert_command(
     reverse_edges: Annotated[
         bool, typer.Option("--reverse-edges", "-r", help="Create bidirectional edges.")
     ] = False,
-):
+) -> None:
     """Convert a document to a knowledge graph."""
-    print("--- [blue]Docling-Graph Conversion[/blue] ---")
+    rich_print("--- [blue]Docling-Graph Conversion[/blue] ---")
 
     # Load configuration
     config_data = load_config()
@@ -142,21 +142,21 @@ def convert_command(
     validate_vlm_constraints(backend_type, inference)
 
     # Display configuration
-    print("\n[bold]Configuration:[/bold]")
-    print(f"  Source: [cyan]{source}[/cyan]")
-    print(f"  Template: [cyan]{template}[/cyan]")
-    print(f"  Docling Pipeline: [cyan]{docling_pipeline}[/cyan]")
-    print(f"  Processing: [cyan]{processing_mode}[/cyan]")
-    print(f"  Backend: [cyan]{backend_type}[/cyan]")
-    print(f"  Inference: [cyan]{inference}[/cyan]")
-    print(f"  Export: [cyan]{export_format}[/cyan]")
-    print(f"  Reverse edges: [cyan]{reverse_edges}[/cyan]")
+    rich_print("\n[bold]Configuration:[/bold]")
+    rich_print(f"  Source: [cyan]{source}[/cyan]")
+    rich_print(f"  Template: [cyan]{template}[/cyan]")
+    rich_print(f"  Docling Pipeline: [cyan]{docling_pipeline}[/cyan]")
+    rich_print(f"  Processing: [cyan]{processing_mode}[/cyan]")
+    rich_print(f"  Backend: [cyan]{backend_type}[/cyan]")
+    rich_print(f"  Inference: [cyan]{inference}[/cyan]")
+    rich_print(f"  Export: [cyan]{export_format}[/cyan]")
+    rich_print(f"  Reverse edges: [cyan]{reverse_edges}[/cyan]")
 
     # Display Docling export settings
-    print("\n[bold]Docling Export:[/bold]")
-    print(f"  Document JSON: [cyan]{final_export_docling_json}[/cyan]")
-    print(f"  Markdown: [cyan]{final_export_markdown}[/cyan]")
-    print(f"  Per-page MD: [cyan]{final_export_per_page}[/cyan]")
+    rich_print("\n[bold]Docling Export:[/bold]")
+    rich_print(f"  Document JSON: [cyan]{final_export_docling_json}[/cyan]")
+    rich_print(f"  Markdown: [cyan]{final_export_markdown}[/cyan]")
+    rich_print(f"  Per-page MD: [cyan]{final_export_per_page}[/cyan]")
 
     # Build run configuration
     run_config = {
@@ -182,9 +182,9 @@ def convert_command(
     # Run pipeline
     try:
         run_pipeline(run_config)
-    except Exception as e:
-        print(f"\n[bold red]Error:[/bold red] {e}")
+    except Exception as err:
+        rich_print(f"\n[bold red]Error:[/bold red] {err}")
         import traceback
 
         traceback.print_exc()
-        raise typer.Exit(code=1)
+        raise typer.Exit(code=1) from err

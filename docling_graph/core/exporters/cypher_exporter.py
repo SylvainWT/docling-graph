@@ -2,7 +2,7 @@
 
 import re
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, TextIO, cast
 
 import networkx as nx
 
@@ -12,7 +12,7 @@ from ..base.config import ExportConfig
 class CypherExporter:
     """Export graph to Cypher script for Neo4j."""
 
-    def __init__(self, config: Optional[ExportConfig] = None):
+    def __init__(self, config: Optional[ExportConfig] = None) -> None:
         """Initialize Cypher exporter.
 
         Args:
@@ -57,7 +57,9 @@ class CypherExporter:
         Returns:
             True if graph has nodes.
         """
-        return graph.number_of_nodes() > 0
+        # number_of_nodes() is not typed in stubs; cast to int for mypy
+        num_nodes = cast(int, graph.number_of_nodes())
+        return num_nodes > 0
 
     @staticmethod
     def _escape_cypher_string(value: Any) -> str:
@@ -69,12 +71,15 @@ class CypherExporter:
         Returns:
             Escaped string safe for Cypher.
         """
-        if not isinstance(value, str):
-            value = str(value)
+        # Ensure we operate on a string for proper typing
+        val_str: str = value if isinstance(value, str) else str(value)
 
         # Escape backslashes, quotes, and newlines
         return (
-            value.replace("\\", "\\\\").replace("'", "\\'").replace('"', '\\"').replace("\n", "\\n")
+            val_str.replace("\\", "\\\\")
+            .replace("'", "\\'")
+            .replace('"', '\\"')
+            .replace("\n", "\\n")
         )
 
     @staticmethod
@@ -94,7 +99,7 @@ class CypherExporter:
             sanitized = "n_" + sanitized
         return sanitized or "node"
 
-    def _write_nodes(self, graph: nx.DiGraph, file) -> None:
+    def _write_nodes(self, graph: nx.DiGraph, file: TextIO) -> None:
         """Write node creation statements.
 
         Args:
@@ -130,7 +135,7 @@ class CypherExporter:
         # Store node vars for relationship creation
         self._node_vars = node_vars
 
-    def _write_relationships(self, graph: nx.DiGraph, file) -> None:
+    def _write_relationships(self, graph: nx.DiGraph, file: TextIO) -> None:
         """Write relationship creation statements.
 
         Args:

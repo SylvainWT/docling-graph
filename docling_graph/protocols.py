@@ -6,7 +6,7 @@ for backends, extractors, and clients. Using Protocols instead of abstract
 base classes provides better type checking and duck typing support.
 """
 
-from typing import Any, Dict, List, Optional, Protocol, Type, runtime_checkable
+from typing import Any, Dict, List, Optional, Protocol, Type, TypeGuard, runtime_checkable
 
 from pydantic import BaseModel
 
@@ -90,11 +90,11 @@ class LLMClientProtocol(Protocol):
         """
         ...
 
-    def get_json_response(self, prompt: str, schema_json: str) -> Dict[str, Any]:
+    def get_json_response(self, prompt: str | dict[str, str], schema_json: str) -> Dict[str, Any]:
         """Execute LLM call and return parsed JSON.
 
         Args:
-            prompt: The full prompt to send to the model.
+            prompt: The full prompt to send to the model (legacy string or structured dict with 'system' and 'user').
             schema_json: The Pydantic schema in JSON format.
 
         Returns:
@@ -180,7 +180,7 @@ class DocumentProcessorProtocol(Protocol):
 # =============================================================================
 
 
-def is_vlm_backend(backend: Any) -> bool:
+def is_vlm_backend(backend: Any) -> TypeGuard[ExtractionBackendProtocol]:
     """Check if backend implements VLM extraction protocol.
 
     Args:
@@ -192,7 +192,7 @@ def is_vlm_backend(backend: Any) -> bool:
     return isinstance(backend, ExtractionBackendProtocol)
 
 
-def is_llm_backend(backend: Any) -> bool:
+def is_llm_backend(backend: Any) -> TypeGuard[TextExtractionBackendProtocol]:
     """Check if backend implements LLM extraction protocol.
 
     Args:

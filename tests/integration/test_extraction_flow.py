@@ -221,7 +221,7 @@ class TestExtractionErrorHandling:
         # Create a mock that simulates file validation
         mock_backend = Mock()
 
-        def mock_extract_that_checks_file(source, template):
+        def mock_extract_that_checks_file(source, template) -> list:
             from pathlib import Path
 
             if not Path(source).exists():
@@ -277,7 +277,7 @@ class TestExtractionWithDifferentBackends:
         mock_llm.extract.return_value = {"name": "Test", "age": 30, "email": "test@example.com"}
 
         with patch("docling_graph.core.extractors.strategies.one_to_one.DocumentProcessor"):
-            strategy = OneToOneStrategy(backend=mock_llm)
+            _ = OneToOneStrategy(backend=mock_llm)
 
             test_doc = temp_dir / "test.pdf"
             test_doc.write_bytes(b"test")
@@ -293,7 +293,7 @@ class TestExtractionWithDifferentBackends:
         mock_vlm.extract.return_value = [{"name": "Test", "age": 30, "email": "test@example.com"}]
 
         with patch("docling_graph.core.extractors.strategies.one_to_one.DocumentProcessor"):
-            strategy = OneToOneStrategy(backend=mock_vlm)
+            _ = OneToOneStrategy(backend=mock_vlm)
 
             test_doc = temp_dir / "test.pdf"
             test_doc.write_bytes(b"test")

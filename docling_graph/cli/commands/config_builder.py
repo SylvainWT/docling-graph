@@ -6,7 +6,7 @@ from typing import Any, Dict, Tuple
 
 import click
 import typer
-from rich import print
+from rich import print as rich_print
 
 from ..constants import (
     API_PROVIDERS,
@@ -25,8 +25,8 @@ def build_config_interactive() -> Dict[str, Any]:
     Returns:
         Dictionary containing complete configuration.
     """
-    print("[bold blue]Welcome to Docling-Graph Setup![/bold blue]")
-    print("Let's configure your knowledge graph pipeline.\n")
+    rich_print("[bold blue]Welcome to Docling-Graph Setup![/bold blue]")
+    rich_print("Let's configure your knowledge graph pipeline.\n")
 
     # Get all configuration sections
     defaults = _prompt_defaults()
@@ -42,13 +42,13 @@ def build_config_interactive() -> Dict[str, Any]:
 
 def _prompt_defaults() -> Dict[str, str]:
     """Prompt for default settings."""
-    print("[bold cyan]── Default Settings ──[/bold cyan]")
+    rich_print("[bold cyan]── Default Settings ──[/bold cyan]")
 
     # Processing Mode
-    print("\n[bold]1. Processing Mode[/bold]")
-    print(" [dim]How should documents be processed?[/dim]")
-    print(" • [cyan]one-to-one[/cyan]: Process each page individually")
-    print(" • [cyan]many-to-one[/cyan]: Process entire document as one unit")
+    rich_print("\n[bold]1. Processing Mode[/bold]")
+    rich_print(" [dim]How should documents be processed?[/dim]")
+    rich_print(" • [cyan]one-to-one[/cyan]: Process each page individually")
+    rich_print(" • [cyan]many-to-one[/cyan]: Process entire document as one unit")
     processing_mode = typer.prompt(
         "Select processing mode",
         type=click.Choice(PROCESSING_MODES, case_sensitive=False),
@@ -56,22 +56,22 @@ def _prompt_defaults() -> Dict[str, str]:
     )
 
     # Backend Type
-    print("\n[bold]2. Backend Type[/bold]")
-    print(" [dim]Which AI backend should be used?[/dim]")
-    print(" • [cyan]llm[/cyan]: Language Model (text-based)")
-    print(" • [cyan]vlm[/cyan]: Vision-Language Model (image-based)")
+    rich_print("\n[bold]2. Backend Type[/bold]")
+    rich_print(" [dim]Which AI backend should be used?[/dim]")
+    rich_print(" • [cyan]llm[/cyan]: Language Model (text-based)")
+    rich_print(" • [cyan]vlm[/cyan]: Vision-Language Model (image-based)")
     backend_type = typer.prompt(
         "Select backend type", type=click.Choice(BACKEND_TYPES, case_sensitive=False), default="llm"
     )
 
     # Inference Location
-    print("\n[bold]3. Inference Location[/bold]")
+    rich_print("\n[bold]3. Inference Location[/bold]")
     if backend_type == "vlm":
-        print(" [yellow]Note: VLM only supports local inference[/yellow]")
+        rich_print(" [yellow]Note: VLM only supports local inference[/yellow]")
         inference = "local"
     else:
-        print(" • [cyan]local[/cyan]: Run on your machine")
-        print(" • [cyan]remote[/cyan]: Use cloud APIs")
+        rich_print(" • [cyan]local[/cyan]: Run on your machine")
+        rich_print(" • [cyan]remote[/cyan]: Use cloud APIs")
         inference = typer.prompt(
             "Select inference location",
             type=click.Choice(INFERENCE_LOCATIONS, case_sensitive=False),
@@ -79,9 +79,9 @@ def _prompt_defaults() -> Dict[str, str]:
         )
 
     # Export Format
-    print("\n[bold]4. Export Format[/bold]")
-    print(" • [cyan]csv[/cyan]: CSV files (nodes.csv, edges.csv)")
-    print(" • [cyan]cypher[/cyan]: Cypher script for Neo4j")
+    rich_print("\n[bold]4. Export Format[/bold]")
+    rich_print(" • [cyan]csv[/cyan]: CSV files (nodes.csv, edges.csv)")
+    rich_print(" • [cyan]cypher[/cyan]: Cypher script for Neo4j")
     export_format = typer.prompt(
         "Select export format",
         type=click.Choice(EXPORT_FORMATS, case_sensitive=False),
@@ -98,12 +98,12 @@ def _prompt_defaults() -> Dict[str, str]:
 
 def _prompt_docling() -> Dict[str, Any]:
     """Prompt for Docling configuration."""
-    print("\n[bold cyan]── Docling Pipeline ──[/bold cyan]")
+    rich_print("\n[bold cyan]── Docling Pipeline ──[/bold cyan]")
 
     # Pipeline selection
-    print("\n[bold]5. Document Processing Pipeline[/bold]")
-    print("  • [cyan]ocr[/cyan]: OCR pipeline (standard documents)")
-    print("  • [cyan]vision[/cyan]: VLM pipeline (complex layouts)")
+    rich_print("\n[bold]5. Document Processing Pipeline[/bold]")
+    rich_print("  • [cyan]ocr[/cyan]: OCR pipeline (standard documents)")
+    rich_print("  • [cyan]vision[/cyan]: VLM pipeline (complex layouts)")
 
     pipeline = typer.prompt(
         "Select docling pipeline",
@@ -112,8 +112,8 @@ def _prompt_docling() -> Dict[str, Any]:
     )
 
     # Export options
-    print("\n[bold]6. Docling Export Options[/bold]")
-    print("  [dim]Choose what to export from document processing:[/dim]")
+    rich_print("\n[bold]6. Docling Export Options[/bold]")
+    rich_print("  [dim]Choose what to export from document processing:[/dim]")
 
     export_docling_json = typer.confirm("  Export Docling document structure (JSON)?", default=True)
 
@@ -133,7 +133,7 @@ def _prompt_docling() -> Dict[str, Any]:
 
 def _prompt_models(backend_type: str, inference: str) -> Dict[str, Any]:
     """Prompt for model configuration."""
-    print("\n[bold cyan]── Model Configuration ──[/bold cyan]")
+    rich_print("\n[bold cyan]── Model Configuration ──[/bold cyan]")
 
     if backend_type == "vlm":
         vlm, llm_local, llm_remote, remote_provider, _ = _prompt_vlm_models()
@@ -161,8 +161,8 @@ def _prompt_models(backend_type: str, inference: str) -> Dict[str, Any]:
 
 def _prompt_vlm_models() -> Tuple[str, str, str, str, str]:
     """Prompt for VLM model."""
-    print("[bold]6. VLM Local Model[/bold]")
-    print(f" • [cyan]{DEFAULT_MODELS['vlm']}[/cyan]: Default")
+    rich_print("[bold]6. VLM Local Model[/bold]")
+    rich_print(f" • [cyan]{DEFAULT_MODELS['vlm']}[/cyan]: Default")
     vlm = typer.prompt("Select VLM model", default=DEFAULT_MODELS["vlm"])
     if vlm == "custom":
         vlm = typer.prompt("Enter custom model path")
@@ -175,11 +175,11 @@ def _prompt_vlm_models() -> Tuple[str, str, str, str, str]:
     )
 
 
-def _prompt_llm_local_models() -> Tuple[str, str, str, str]:
+def _prompt_llm_local_models() -> Tuple[str, str, str, str, str]:
     """Prompt for local LLM model."""
-    print("\n[bold]6. Local LLM Provider[/bold]")
-    print(" • [cyan]ollama[/cyan]: Ollama (requires ollama serve)")
-    print(" • [cyan]vllm[/cyan]: vLLM (direct Python API, GPU required)")
+    rich_print("\n[bold]6. Local LLM Provider[/bold]")
+    rich_print(" • [cyan]ollama[/cyan]: Ollama (requires ollama serve)")
+    rich_print(" • [cyan]vllm[/cyan]: vLLM (direct Python API, GPU required)")
 
     local_provider = typer.prompt(
         "Select local provider",
@@ -187,10 +187,10 @@ def _prompt_llm_local_models() -> Tuple[str, str, str, str]:
         default="vllm",
     )
 
-    print(f"\n[bold]7. LLM Model for {local_provider}[/bold]")
-    print(f" • [cyan]{DEFAULT_MODELS['llm_local']}[/cyan]: Default")
+    rich_print(f"\n[bold]7. LLM Model for {local_provider}[/bold]")
+    rich_print(f" • [cyan]{DEFAULT_MODELS['llm_local']}[/cyan]: Default")
 
-    llm = typer.prompt("Select LLM model", default=DEFAULT_MODELS)
+    llm = typer.prompt("Select LLM model", default=DEFAULT_MODELS["llm_local"])
     if llm == "custom":
         llm = typer.prompt(f"Enter {local_provider} model name")
 
@@ -205,8 +205,8 @@ def _prompt_llm_local_models() -> Tuple[str, str, str, str]:
 
 def _prompt_llm_remote_models() -> Tuple[str, str, str, str, str]:
     """Prompt for remote LLM model."""
-    print("[bold]6. API Provider[/bold]")
-    print(" • [cyan]mistral[/cyan], [cyan]openai[/cyan], [cyan]gemini[/cyan]")
+    rich_print("[bold]6. API Provider[/bold]")
+    rich_print(" • [cyan]mistral[/cyan], [cyan]openai[/cyan], [cyan]gemini[/cyan]")
     provider = typer.prompt(
         "Select API provider",
         type=click.Choice(API_PROVIDERS, case_sensitive=False),
@@ -218,12 +218,12 @@ def _prompt_llm_remote_models() -> Tuple[str, str, str, str, str]:
 
 def _prompt_output() -> Dict[str, Any]:
     """Prompt for output settings."""
-    print("\n[bold cyan]── Output Settings ──[/bold cyan]")
+    rich_print("\n[bold cyan]── Output Settings ──[/bold cyan]")
 
-    print("\n[bold]7. Output Directory[/bold]")
+    rich_print("\n[bold]7. Output Directory[/bold]")
     directory = typer.prompt("Default output directory", default="outputs")
 
-    print("\n[bold]8. Visualization Options[/bold]")
+    rich_print("\n[bold]8. Visualization Options[/bold]")
     visualizations = typer.confirm("Create interactive visualizations?", default=True)
     markdown = typer.confirm("Create markdown report?", default=True)
 
@@ -239,20 +239,20 @@ def print_next_steps(config: Dict[str, Any]) -> None:
     inference = config["defaults"]["inference"]
     backend = config["defaults"]["backend_type"]
 
-    print("\n[bold]Next steps:[/bold]")
+    rich_print("\n[bold]Next steps:[/bold]")
     if inference == "local" and backend == "llm":
         provider = config["models"]["llm"]["local"]["provider"]
         model = config["models"]["llm"]["local"]["default_model"]
 
         if provider == "ollama":
-            print(" 1. Start Ollama: [cyan]ollama serve[/cyan]")
-            print(f" 2. Pull model: [cyan]ollama pull {model}[/cyan]")
+            rich_print(" 1. Start Ollama: [cyan]ollama serve[/cyan]")
+            rich_print(f" 2. Pull model: [cyan]ollama pull {model}[/cyan]")
         elif provider == "vllm":
-            print(f" 1. Start vLLM: [cyan]vllm serve {model} --host 0.0.0.0[/cyan]")
-            print(" 2. Ensure GPU available with sufficient memory")
+            rich_print(f" 1. Start vLLM: [cyan]vllm serve {model} --host 0.0.0.0[/cyan]")
+            rich_print(" 2. Ensure GPU available with sufficient memory")
     elif inference == "remote":
         provider = config["models"]["llm"]["remote"]["provider"].upper()
-        print(f" 1. Set API key: [cyan]export {provider}_API_KEY='...'[/cyan]")
+        rich_print(f" 1. Set API key: [cyan]export {provider}_API_KEY='...'[/cyan]")
 
-    print(" 3. Convert: [cyan]docling-graph convert doc.pdf -t templates.Invoice[/cyan]")
-    print("\n[dim]Edit config.yaml anytime to adjust settings.[/dim]")
+    rich_print(" 3. Convert: [cyan]docling-graph convert doc.pdf -t templates.Invoice[/cyan]")
+    rich_print("\n[dim]Edit config.yaml anytime to adjust settings.[/dim]")
