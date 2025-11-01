@@ -9,13 +9,29 @@ import os
 from typing import TYPE_CHECKING, Any, Dict, cast
 
 from dotenv import load_dotenv
-from openai import OpenAI
 from rich import print as rich_print
 
 from .llm_base import BaseLlmClient
 
 # Load environment variables
 load_dotenv()
+
+# Requires `pip install openai`
+# Make the lazy import optional to satisfy type checkers when assigning None
+_OpenAI: Any | None = None
+try:
+    from openai import OpenAI as OpenAI_module
+
+    _OpenAI = OpenAI_module
+except ImportError:
+    rich_print(
+        "[red]Error:[/red] `openai` package not found. "
+        "Please run `pip install openai` to use OpenAI client."
+    )
+    _OpenAI = None
+
+# Expose as Any to allow None fallback without mypy issues
+OpenAI: Any = _OpenAI
 
 
 class OpenAIClient(BaseLlmClient):

@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "docling_graph"
 version = "0.1.0"
@@ -18,8 +22,8 @@ classifiers = [
 ]
 readme = "README.md"
 authors = [ # In alphabetical order
-  { name = "Ayoub El Bouchtili", email = "ayoub.elbouchtili@fr.ibm.com" },
   { name = "Michele Dolfi", email = "dol@zurich.ibm.com" },
+  { name = "Ayoub El Bouchtili", email = "ayoub.elbouchtili@fr.ibm.com" },
   { name = "Maxime Gillot", email = "Maxime.Gillot@ibm.com" },  
   { name = "Sophie Lang", email = "sophie.lang@de.ibm.com" },
   { name = "Guilhaume Leroy Meline", email = "guilhaume@fr.ibm.com" },
@@ -27,12 +31,12 @@ authors = [ # In alphabetical order
 ]
 requires-python = ">=3.10,<4.0"
 dependencies = [
-    "docling-core[chunking]>=2.50.0,<3.0.0",
     "docling[vlm]>=2.0.0,<3.0.0",
+    "docling-core[chunking]>=2.50.0,<3.0.0",
     "pydantic>=2.0.0,<3.0.0",
     "networkx>=3.0.0,<4.0.0",
-    "rich>=13,<14",  # verify constraints you need
-    "typer[all]>=0.12,<1.0.0",  # verify min version used in code
+    "rich>=13,<14",
+    "typer[all]>=0.12,<1.0.0",
     "python-dotenv>=1.0,<2.0",
 ]
 
@@ -45,8 +49,20 @@ changelog = "https://github.com/ayoub-ibm/docling-graph/blob/main/CHANGELOG.md"
 [project.scripts]
 docling-graph = "docling_graph.cli.main:main"
 
-# LLM-related optional dependencies
-llm = "docling_graph.llm:main"
+[project.optional-dependencies]
+# --- Local Clients ---
+ollama = ["ollama"]
+vllm = ["openai"]
+
+# --- Remote Clients ---
+gemini = ["google-genai"]
+mistral = ["mistralai"]
+openai = ["openai"]
+
+# --- Bundles ---
+local = ["docling-graph[ollama]", "docling-graph[vllm]"]
+remote = ["docling-graph[openai]", "docling-graph[mistral]", "docling-graph[gemini]"]
+all = ["docling-graph[local]", "docling-graph[remote]"]
 
 [dependency-groups]
 # Development tools (linters, type-checkers) and utilities
@@ -188,6 +204,7 @@ module = [
     "mypy.*",
     "pandas.*",
     "networkx.*",
+    "vllm.*",
     "ollama.*",
     "openai.*",
     "mistralai.*",

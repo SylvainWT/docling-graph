@@ -9,13 +9,29 @@ import os
 from typing import Any, Dict, cast
 
 from dotenv import load_dotenv
-from mistralai import Mistral
 from rich import print as rich_print
 
 from .llm_base import BaseLlmClient
 
 # Load environment variables
 load_dotenv()
+
+# Requires `pip install mistralai`
+# Make the lazy import optional to satisfy type checkers when assigning None
+_Mistral: Any | None = None
+try:
+    from mistralai import Mistral as Mistral_module
+
+    _Mistral = Mistral_module
+except ImportError:
+    rich_print(
+        "[red]Error:[/red] `mistralai` package not found. "
+        "Please run `pip install mistralai` to use Mistral client."
+    )
+    _Mistral = None
+
+# Expose as Any to allow None fallback without mypy issues
+Mistral: Any = _Mistral
 
 
 class MistralClient(BaseLlmClient):

@@ -1,7 +1,6 @@
 """
 Init command - creates configuration file interactively.
 """
-
 from pathlib import Path
 
 import typer
@@ -11,6 +10,7 @@ from rich import print as rich_print
 from ..config_utils import save_config
 from ..constants import CONFIG_FILE_NAME
 from .config_builder import build_config_interactive, print_next_steps
+from ..validators import validate_and_warn_dependencies, print_next_steps_with_deps
 
 
 def init_command() -> None:
@@ -27,14 +27,12 @@ def init_command() -> None:
     # Build configuration interactively
     try:
         config_dict = build_config_interactive()
-
     except (EOFError, KeyboardInterrupt, typer.Abort):
         # Handle non-interactive environment gracefully
         rich_print("[yellow]Interactive mode not available. Using default configuration.[/yellow]")
 
         # Load default config from template
-        template_path = Path(__file__).parent.parent.parent / "config_template.yaml"
-
+        template_path = Path(__file__).parent.parent / "config_template.yaml"
         if template_path.exists():
             with open(template_path) as f:
                 config_dict = yaml.safe_load(f)
@@ -48,29 +46,38 @@ def init_command() -> None:
                     "inference": "local",
                     "export_format": "csv",
                 },
-                "docling": {"pipeline": "default"},
+                "docling": {"pipeline": "ocr"},
                 "models": {
-                    "vlm": {
-                        "local": {"default_model": "numind/NuExtract-2.0-8B", "provider": "docling"}
+                    "vlm": {"local": {"default_model": "numind/NuExtract-2.0-8B", "provider": "docling"}},
+                    "llm": {
+                        "local": {"default_model": "llama-3.8b-instruct", "provider": "ollama"},
                     },
-                    "llm": {"local": {"default_model": "llama3:8b-instruct", "provider": "ollama"}},
                 },
-                "output": {"directory": "./output"},
+                "output": {"directory": "./outputs"},
             }
             rich_print("[blue]Using minimal default configuration.[/blue]")
-
     except Exception as err:
-        rich_print(f"[red]Error creating config:[/red] {err}")
+        rich_print(f"[red]Error creating config: {err}[/red]")
         raise typer.Exit(code=1) from err
 
-    # Save configuration
+    # Validate dependencies BEFORE saving
+    rich_print("\n[bold cyan]Validating dependencies...[/bold cyan]")
+    deps_valid = validate_and_warn_dependencies(config_dict, interactive=True)
+
+    # Save configuration regardless of dependency validation
+    # (validation is just a warning, not a blocker)
     try:
         save_config(config_dict, output_path)
-        rich_print(f"\n[green]Successfully created '{output_path}'[/green]")
-
-        # Print next steps
-        print_next_steps(config_dict)
-
+        rich_print(f"[green]Successfully created {output_path}[/green]")
     except Exception as err:
-        rich_print(f"[red]Error saving config:[/red] {err}")
+        rich_print(f"[red]Error saving config: {err}[/red]")
         raise typer.Exit(code=1) from err
+
+    # Print next steps with dependency info
+    print_next_steps(config_dict)
+    print_next_steps_with_deps(config_dict)
+
+    if not deps_valid:
+        rich_print(
+            "[yellow]Note: Install the dependencies above before running conversions.[/yellow]"
+        )

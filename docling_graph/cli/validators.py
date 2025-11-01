@@ -2,7 +2,7 @@
 Input validation functions for CLI commands.
 """
 
-from typing import Literal
+from typing import  Optional, Tuple, Literal
 
 import typer
 from rich import print as rich_print
@@ -15,6 +15,15 @@ from .constants import (
     PROCESSING_MODES,
 )
 
+from ..deps import (
+    INFERENCE_PROVIDERS,
+    OPTIONAL_DEPS,
+    get_missing_dependencies,
+    get_missing_for_inference_type,
+)
+
+
+# --- Configuration Validators ---
 
 def validate_processing_mode(mode: str) -> str:
     """Validate processing mode.
@@ -148,3 +157,141 @@ def validate_provider(provider: str, inference: str) -> str:
             f"Valid options: {', '.join(valid_providers)}"
         )
     return provider
+
+
+# --- Dependencies Validators ---
+
+def check_provider_installed(provider: str) -> bool:
+    """Check if a provider's package is installed."""
+    dep = OPTIONAL_DEPS.get(provider)
+    if not dep:
+        return True  # Unknown provider
+    return dep.is_installed
+
+
+def validate_config_dependencies(config_dict: dict) -> Tuple[bool, Optional[str]]:
+    """
+    Validate that required dependencies for the config are available.
+
+    Args:
+        config_dict: The configuration dictionary
+
+    Returns:
+        Tuple of (is_valid, inference_type) where:
+        - is_valid: True if all dependencies are available
+        - inference_type: The inference type from config ("local" or "remote")
+    """
+    # Extract inference type from config
+    defaults = config_dict.get("defaults", {})
+    inference_type = defaults.get("inference", "remote")
+
+    # Extract provider from config
+    models = config_dict.get("models", {})
+
+    if inference_type == "local":
+        llm_config = models.get("llm", {})
+        local_config = llm_config.get("local", {})
+        provider = local_config.get("provider")
+    else:  # remote
+        llm_config = models.get("llm", {})
+        remote_config = llm_config.get("remote", {})
+        provider = remote_config.get("provider")
+
+    # Check if provider is installed
+    if provider and not check_provider_installed(provider):
+        return False, inference_type
+
+    return True, inference_type
+
+
+def validate_and_warn_dependencies(
+    config_dict: dict, interactive: bool = True
+) -> bool:
+    """
+    Validate dependencies and show helpful warnings if missing.
+
+    Shows warnings but doesn't block configuration creation.
+
+    Args:
+        config_dict: The configuration dictionary
+        interactive: If True, show interactive prompts to install
+
+    Returns:
+        True if all dependencies are available, False if some are missing
+    """
+    is_valid, inference_type = validate_config_dependencies(config_dict)
+
+    if not is_valid:
+        missing = get_missing_for_inference_type(inference_type)
+
+        rich_print("\n[yellow]Warning: Required dependencies not installed[/yellow]")
+        rich_print(f"\nYour configuration uses [bold]{inference_type}[/bold] inference.")
+        rich_print("\nThe following provider dependencies are missing:")
+
+        for dep in missing:
+            rich_print(f"  • [bold]{dep.name}[/bold] - {dep.description}")
+
+        rich_print("\n[blue]Install them with:[/blue]")
+
+        if inference_type == "local":
+            rich_print("  pip install 'docling-graph[local]'")
+            rich_print("\n  Or install specific providers:")
+            for dep in missing:
+                rich_print(f"  {dep.get_install_command()}")
+        else:  # remote
+            rich_print("  pip install 'docling-graph[remote]'")
+            rich_print("\n  Or install specific providers:")
+            for dep in missing:
+                rich_print(f"  {dep.get_install_command()}")
+
+        rich_print()
+        return False
+
+    return True
+
+
+def print_dependency_setup_guide(inference_type: str) -> None:
+    """
+    Print setup guide for the selected inference type.
+
+    Args:
+        inference_type: Either "local" or "remote"
+    """
+    providers = INFERENCE_PROVIDERS.get(inference_type, [])
+    missing = get_missing_dependencies(providers)
+
+    if not missing:
+        rich_print(f"\n[green]All {inference_type} inference dependencies are installed![/green]")
+        return
+
+    rich_print(f"\n[yellow]Setup required for {inference_type} inference[/yellow]")
+    rich_print(f"\nYou selected [bold]{inference_type}[/bold] inference.")
+    rich_print("\n[blue]Available providers and their dependencies:[/blue]")
+
+    for provider in providers:
+        dep = OPTIONAL_DEPS.get(provider)
+        if dep:
+            status = "[green]+[/green]" if dep.is_installed else "[red]-[/red]"
+            rich_print(f"  {status} {dep.description}")
+
+    if missing:
+        rich_print("\n[blue]Run the following comamnd to install missing dependencies:[/blue]")
+
+        if inference_type == "local":
+            rich_print("  uv sync --extra local")
+        else:  # remote
+            rich_print("  uv sync --extra remote")
+
+    rich_print()
+
+
+def print_next_steps_with_deps(config_dict: dict) -> None:
+    """
+    Print setup guide for the configured inference type.
+
+    Args:
+        config_dict: The configuration dictionary
+    """
+    defaults = config_dict.get("defaults", {})
+    inference_type = defaults.get("inference", "remote")
+    print_dependency_setup_guide(inference_type)

@@ -15,10 +15,13 @@ from .llm_base import BaseLlmClient
 # Make the lazy import optional to satisfy type checkers when assigning None
 _ollama: Any | None = None
 try:
-    import ollama as _ollama
+    import ollama as ollama_module  # Import to a temporary name
+
+    _ollama = ollama_module  # Assign to the existing variable
 except ImportError:
     rich_print(
-        "[red]Error:[/red] `ollama` package not found. Please run `pip install ollama` to use local LLMs."
+        "[red]Error:[/red] `ollama` package not found. "
+        "Please run `pip install ollama` to use Ollama client."
     )
     _ollama = None
 

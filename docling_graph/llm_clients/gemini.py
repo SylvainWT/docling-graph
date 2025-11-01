@@ -9,14 +9,34 @@ import os
 from typing import Any, Dict
 
 from dotenv import load_dotenv
-from google import genai
-from google.genai import types
 from rich import print as rich_print
 
 from .llm_base import BaseLlmClient
 
 # Load environment variables
 load_dotenv()
+
+# Requires `pip install google-generativeai`
+# Make the lazy import optional to satisfy type checkers when assigning None
+_genai: Any | None = None
+_genai_types: Any | None = None
+try:
+    import google.genai as genai_module
+    from google.genai import types as types_module
+
+    _genai = genai_module
+    _genai_types = types_module
+except ImportError:
+    rich_print(
+        "[red]Error:[/red] `google-genai` package not found. "
+        "Please run `pip install google-genai` to use Gemini client."
+    )
+    _genai = None
+    _genai_types = None
+
+# Expose as Any to allow None fallback without mypy issues
+genai: Any = _genai
+types: Any = _genai_types
 
 
 class GeminiClient(BaseLlmClient):

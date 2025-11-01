@@ -47,8 +47,8 @@ def _prompt_defaults() -> Dict[str, str]:
     # Processing Mode
     rich_print("\n[bold]1. Processing Mode[/bold]")
     rich_print(" [dim]How should documents be processed?[/dim]")
-    rich_print(" • [cyan]one-to-one[/cyan]: Process each page individually")
-    rich_print(" • [cyan]many-to-one[/cyan]: Process entire document as one unit")
+    rich_print(" • [cyan]one-to-one[/cyan]: Creates a separate Pydantic instance for each page.")
+    rich_print(" • [cyan]many-to-one[/cyan]: Combines the entire document into a single Pydantic instance.")
     processing_mode = typer.prompt(
         "Select processing mode",
         type=click.Choice(PROCESSING_MODES, case_sensitive=False),

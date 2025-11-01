@@ -94,7 +94,7 @@ class TestPipelineEndToEnd:
 class TestPipelineErrorHandling:
     """Test error handling in pipeline."""
 
-    def test_pipeline_handles_missing_file(self):
+    def test_pipeline_handles_psing_file(self):
         """Test pipeline handles missing source file."""
         config = {"source": "/path/to/nonexistent.pdf", "template": "some.Template"}
 

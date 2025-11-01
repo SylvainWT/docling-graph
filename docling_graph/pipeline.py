@@ -26,7 +26,7 @@ from .core import (
 )
 
 # Import LLM clients
-from .llm_clients import BaseLlmClient, MistralClient, OllamaClient, VllmClient
+from .llm_clients import BaseLlmClient, get_client
 
 
 def _load_template_class(template_str: str) -> type[BaseModel]:
@@ -104,10 +104,11 @@ def _get_model_config(
 
 
 def _initialize_llm_client(provider: str, model: str) -> BaseLlmClient:
-    """Initializes an LLM client based on provider.
+    """
+    Initializes an LLM client based on provider using lazy-loading.
 
     Args:
-        provider: Provider name ('mistral', 'ollama', etc.).
+        provider: Provider name ('mistral', 'ollama', 'vllm', 'openai', 'gemini').
         model: Model name.
 
     Returns:
@@ -115,15 +116,11 @@ def _initialize_llm_client(provider: str, model: str) -> BaseLlmClient:
 
     Raises:
         ValueError: If provider is unknown.
+        ImportError: If the provider’s package is not installed.
     """
-    if provider == "mistral":
-        return MistralClient(model=model)
-    elif provider == "vllm":
-        return VllmClient(model=model)
-    elif provider == "ollama":
-        return OllamaClient(model=model)
-    else:
-        raise ValueError(f"Unknown LLM provider: {provider}")
+    # Lazy-load the client class only when actually needed
+    ClientClass = get_client(provider)
+    return ClientClass(model=model)
 
 
 def run_pipeline(config: Dict[str, Any]) -> None:

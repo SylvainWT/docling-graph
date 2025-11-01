@@ -11,8 +11,25 @@ from rich import print as rich_print
 
 from .llm_base import BaseLlmClient
 
+# Requires `pip install openai`
+# Make the lazy import optional to satisfy type checkers when assigning None
+_OpenAI: Any | None = None
+try:
+    from openai import OpenAI as OpenAI_module
+
+    _OpenAI = OpenAI_module
+except ImportError:
+    rich_print(
+        "[red]Error:[/red] `openai` package not found. "
+        "Please run `pip install openai` to use the vLLM client."
+    )
+    _OpenAI = None
+
+# Expose as Any to allow None fallback without mypy issues
+OpenAI: Any = _OpenAI
+
 if TYPE_CHECKING:  # Only imported for type checking; avoids runtime dependency at import
-    from openai.types.chat import ChatCompletionMessageParam
+    from OpenAI.types.chat import ChatCompletionMessageParam
 
 
 class VllmClient(BaseLlmClient):
@@ -34,13 +51,6 @@ class VllmClient(BaseLlmClient):
             2. Server will run at http://localhost:8000
             3. Client will connect automatically
         """
-        # Import OpenAI client lazily to avoid module-level type issues
-        try:
-            from openai import OpenAI
-        except ImportError as e:  # pragma: no cover - import-time error handling
-            raise ImportError(
-                "OpenAI client is required for vLLM. Install it with: pip install openai"
-            ) from e
 
         self.model = model
         self.base_url = base_url
@@ -73,7 +83,7 @@ class VllmClient(BaseLlmClient):
             rich_print("[blue][VllmClient][/blue] Connected successfully")
             rich_print(f"[blue][VllmClient][/blue] Using model: [blue]{self.model}[/blue]")
         except Exception as e:
-            rich_print(f"[red]✗ vLLM connection failed:[/red] {e}")
+            rich_print(f"[red]vLLM connection failed:[/red] {e}")
             rich_print("\n[yellow]Setup instructions:[/yellow]")
             rich_print("  1. Start vLLM server in a separate terminal:")
             rich_print(f"     [cyan]vllm serve {self.model}[/cyan]")
