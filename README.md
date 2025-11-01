@@ -26,15 +26,6 @@ The toolkit supports two extraction families: **local VLM** via Docling and **LL
 
 
 
-## Design Philosophy
-
-- **Separation of Concerns**: Decouples processing granularity, model family, and inference site.
-- **Typed, Validated Outputs**: Uses Pydantic models with stable node IDs driven by optional `graph_id_fields`.
-- **Modular Architecture**: Graph module with clean separation (`core`, `exporters`, `visualizers`, `utils`).
-- **Robust Fallbacks**: Supports long documents with merging strategies, clear logs, Markdown reports, and exportable graphs (`CSV`, `JSON` or `Cypher`) for batch imports.
-
-
-
 ## Key Capabilities
 
 - **Extraction**:
@@ -57,16 +48,6 @@ The toolkit supports two extraction families: **local VLM** via Docling and **LL
   - Detailed `MARKDOWN` report with graph nodes content and edges
 
 
-
-## Docling Graph Workflow
-
-Docling Graph provides an automated pipeline that transforms unstructured documents into structured, validated data and graph representations.
-
-It integrates `document conversion`, data `extraction via LLMs & VLMs`, `schema validation`, and `graph construction`, enabling flexible export and interactive visualization of complex document relationships.
-
-<p align="center"><br>
-  <img src="docs/assets/docling_graph_workflow.png" alt="Docling Graph Workflow" width="550">
-</p>
 
 ## First Setup
 
@@ -141,12 +122,6 @@ export GEMINI_API_KEY="..."
 
 Alternatively, add them to your `.env` file.
 
-Links to get your keys:
-
-* OpenAI: [https://platform.openai.com/account/api-keys](https://platform.openai.com/account/api-keys)
-* Mistral: [https://console.mistral.ai/api-keys/](https://console.mistral.ai/api-keys/)
-* Gemini: [https://aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey)
-
 
 
 ## Quick Start
@@ -160,13 +135,13 @@ uv run docling-graph init
 ### 2. Run Conversion (CLI)
 
 ```bash
-uv run docling-graph convert <SOURCE> --template "<TEMPLATE_PATH>" [OPTIONS]
+uv run docling-graph convert <SOURCE_FILE_PATH> --template "<TEMPLATE_PATH>" [OPTIONS]
 ```
 
 ### 2. Run Conversion (CLI)
 
 ```bash
-uv run docling-graph inspect <OUTPUT>
+uv run docling-graph inspect <CONVERT_OUTPUT_PATH>
 ```
 
 
@@ -206,59 +181,6 @@ For complete guidance, see: [Pydantic Templates for Knowledge Graph Extraction](
 
 
 
-## Environment and Providers
-
-If you plan to run LLM inference locally, make sure the local LLM services are started beforehand.
-
-### Local LLM
-
-**vLLM:**
-```bash
-# Start vLLM service and pull model
-vllm serve ibm-granite/granite-4.0-1b
-```
-
-**Ollama:**
-```bash
-# Start Ollama service
-ollama serve
-
-# Pull a model
-ollama pull llama3:8b-instruct
-```
-
-### API Providers
-
-API keys for LLM providers can also be set in the `.env` file.
-
-**Mistral:**
-```bash
-export MISTRAL_API_KEY="your_api_key_here"
-# or add to .env file
-```
-
-**OpenAI:**
-```bash
-export OPENAI_API_KEY="your_api_key_here"
-```
-
-**Google Gemini:**
-```bash
-export GEMINI_API_KEY="your_api_key_here"
-```
-
-### Local VLM (via Docling)
-
-Specify HuggingFace model ID:
-```yaml
-vlm:
-  local:
-    default_model: "numind/NuExtract-2.0-8B"
-    provider: "docling"
-```
-
-
-
 ## License
 
 MIT License - see [LICENSE](LICENSE) for details.
@@ -270,7 +192,7 @@ MIT License - see [LICENSE](LICENSE) for details.
 - Powered by [Docling](https://github.com/docling-project/docling) for advanced document processing.
 - Uses [Pydantic](https://pydantic.dev) for data validation.
 - Graph generation powered by [NetworkX](https://networkx.org/).
-- Visualizations with [Cytoscape.js](https://js.cytoscape.org/).
+- Visualizations powered by [Cytoscape.js](https://js.cytoscape.org/).
 - CLI powered by [Typer](https://typer.tiangolo.com/) and [Rich](https://github.com/Textualize/rich).
 
 
