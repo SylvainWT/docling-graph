@@ -205,8 +205,8 @@ ANTHROPIC = ProviderConfig(
 )
 
 
-# --- IBM GRANITE PROVIDER ---
-IBM_MODELS = {
+# --- WATSONX / REMOTE INFERENCE PROVIDER ---
+WATSONX_MODELS = {
     "granite-3b-code-instruct": ModelConfig(
         model_id="ibm-granite/granite-3b-code-instruct",
         context_limit=8192,
@@ -233,9 +233,9 @@ IBM_MODELS = {
     ),
 }
 
-IBM = ProviderConfig(
+WATSONX = ProviderConfig(
     provider_id="ibm",
-    models=IBM_MODELS,
+    models=WATSONX_MODELS,
     tokenizer="ibm-granite/granite-embedding-278m-multilingual",
     content_ratio=0.75,  # More conservative for smaller models
 )
@@ -367,7 +367,7 @@ PROVIDERS: Dict[str, ProviderConfig] = {
     "openai": OPENAI,
     "gemini": GEMINI,
     "anthropic": ANTHROPIC,
-    "ibm": IBM,
+    "watsonx": WATSONX,
     "meta": META,
     "vllm": VLLM,
     "ollama": OLLAMA,

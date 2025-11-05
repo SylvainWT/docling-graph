@@ -208,7 +208,7 @@ def run_pipeline(config: Union[PipelineConfig, Dict[str, Any]]) -> None:
         try:
             knowledge_graph, graph_metadata = converter.pydantic_list_to_graph(extracted_models)
         except ValueError as e:
-            rich_print(f"[red][Pipeline][/red] Graph creation failed: {e}")
+            rich_print(f"[red][Pipeline] Graph creation failed:[/red] {e}")
             raise
 
         rich_print(

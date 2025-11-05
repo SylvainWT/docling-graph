@@ -187,7 +187,7 @@ class Measurement(BaseModel):
 
 class MaterialProperty(Measurement):
     """Represents a material property, inherits from Measurement."""
-    pass
+    model_config = ConfigDict(graph_id_fields=['name', 'text_value', 'numeric_value', 'unit'])
 
 
 # 2. --- Materials and Composition ---
@@ -276,7 +276,7 @@ class Component(BaseModel):
         examples=["Active Material", "Binder", "Conductive Additive"],
     )
 
-    amount: ComponentAmount = Field(
+    amount: Optional[ComponentAmount] = Field(
         description="Amount specification (weight/volume fraction).",
         examples=[{"name": "Weight Fraction", "numeric_value": 12.0, "unit": "wt%"}],
     )
@@ -299,7 +299,7 @@ class Component(BaseModel):
 
 class Property(Measurement):
     """Represents a slurry property."""
-    pass
+    model_config = ConfigDict(graph_id_fields=['name', 'text_value', 'numeric_value', 'unit'])
 
 
 class SlurryType(str, Enum):
@@ -481,7 +481,7 @@ class MetricType(str, Enum):
 
 class EvaluationMetric(Measurement):
     """Represents an evaluation metric value."""
-    pass
+    model_config = ConfigDict(graph_id_fields=['name', 'text_value', 'numeric_value', 'unit'])
 
 
 class EvaluationResult(BaseModel):

@@ -75,6 +75,8 @@ class NodeIDRegistry:
                 if field_value and not isinstance(field_value, list | dict | BaseModel):
                     fingerprint_data[field_name] = field_value
 
+        fingerprint_data["__class__"] = model_instance.__class__.__name__
+
         # Create deterministic hash
         fingerprint_str = json.dumps(fingerprint_data, sort_keys=True, default=str)
         fingerprint = hashlib.blake2b(fingerprint_str.encode()).hexdigest()[:16]
