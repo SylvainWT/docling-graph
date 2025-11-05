@@ -7,7 +7,7 @@ from pathlib import Path
 import networkx as nx
 import pytest
 
-from docling_graph.core.base.config import ExportConfig
+from docling_graph.core.converters.config import ExportConfig
 from docling_graph.core.exporters.cypher_exporter import CypherExporter
 
 

@@ -8,7 +8,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from pydantic import BaseModel
 
-from docling_graph.core.extractors.utils import (
+from docling_graph.core.utils.dict_merger import (
     TOKEN_CHAR_RATIO,
     chunk_text,
     consolidate_extracted_data,

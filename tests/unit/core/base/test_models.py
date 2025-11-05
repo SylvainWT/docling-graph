@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 import pytest
 from pydantic import ValidationError
 
-from docling_graph.core.base.models import Edge, GraphMetadata
+from docling_graph.core.converters.models import Edge, GraphMetadata
 
 
 class TestEdgeModel:

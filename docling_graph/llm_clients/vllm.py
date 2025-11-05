@@ -9,7 +9,8 @@ from typing import TYPE_CHECKING, Any, Dict, cast
 
 from rich import print as rich_print
 
-from .llm_base import BaseLlmClient
+from .base import BaseLlmClient
+from .config import get_context_limit
 
 # Requires `pip install openai`
 # Make the lazy import optional to satisfy type checkers when assigning None
@@ -36,22 +37,12 @@ class VllmClient(BaseLlmClient):
     """vLLM client implementation using OpenAI-compatible API."""
 
     def __init__(
-        self, model: str, base_url: str = "http://localhost:8000/v1", api_key: str = "EMPTY"
+        self,
+        model: str,
+        base_url: str = "http://localhost:8000/v1",
+        api_key: str = "EMPTY"
     ) -> None:
-        """
-        Initialize vLLM client.
-
-        Args:
-            model: Model name or path (e.g., "meta-llama/Llama-3.1-8B-Instruct")
-            base_url: vLLM server base URL (default: "http://localhost:8000/v1")
-            api_key: API key (default: "EMPTY" for local servers)
-
-        Setup:
-            1. Start vLLM server: vllm serve meta-llama/Llama-3.1-8B-Instruct
-            2. Server will run at http://localhost:8000
-            3. Client will connect automatically
-        """
-
+        """Initialize vLLM client."""
         self.model = model
         self.base_url = base_url
         self.api_key = api_key
@@ -59,26 +50,14 @@ class VllmClient(BaseLlmClient):
         # Initialize OpenAI client pointing to vLLM server
         self.client = OpenAI(base_url=base_url, api_key=api_key)
 
-        # Context limits for common models
-        model_context_limits = {
-            "meta-llama/Llama-3.1-8B": 128000,
-            "mistralai/Mixtral-8x7B-v0.1": 32000,
-            "qwen/Qwen2-7B": 128000,
-            "ibm-granite/granite-4.0-h-tiny": 128000,
-            "ibm-granite/granite-4.0-h-micro": 128000,
-            "ibm-granite/granite-4.0-1b": 128000,
-            "ibm-granite/granite-4.0-350m": 128000,
-        }
-
-        # Try to match model name to known context limits
-        self._context_limit = model_context_limits.get(model, 32000)
+        # Use centralized config registry (vllm provider)
+        self._context_limit = get_context_limit("vllm", model)
 
         # Test connection
         try:
             rich_print(
                 f"[blue][VllmClient][/blue] Connecting to vLLM server at: [cyan]{self.base_url}[/cyan]"
             )
-            # Test connection by listing models
             self.client.models.list()
             rich_print("[blue][VllmClient][/blue] Connected successfully")
             rich_print(f"[blue][VllmClient][/blue] Using model: [blue]{self.model}[/blue]")
@@ -157,10 +136,7 @@ class VllmClient(BaseLlmClient):
                 return {}
 
         except Exception as e:
-            rich_print(f"[red]Error:[/red] vLLM API call failed: {e}")
-            import traceback
-
-            traceback.print_exc()
+            rich_print(f"[red]Error:[/red] vLLM API call failed: {type(e).__name__}: {e}")
             return {}
 
     @property

@@ -6,7 +6,7 @@ from typing import Literal
 
 from rich import print as rich_print
 
-from ...llm_clients.llm_base import BaseLlmClient
+from ...llm_clients.base import BaseLlmClient
 from ...protocols import Backend
 from .backends.llm_backend import LlmBackend
 from .backends.vlm_backend import VlmBackend
@@ -40,9 +40,9 @@ class ExtractorFactory:
             BaseExtractor: Configured extractor instance.
         """
         rich_print("[blue][ExtractorFactory][/blue] Creating extractor:")
-        rich_print(f" Mode: [cyan]{processing_mode}[/cyan]")
-        rich_print(f" Type: [cyan]{backend_name}[/cyan]")
-        rich_print(f" Docling: [cyan]{docling_config}[/cyan]")
+        rich_print(f" • Mode: [cyan]{processing_mode}[/cyan]")
+        rich_print(f" • Type: [cyan]{backend_name}[/cyan]")
+        rich_print(f" • Docling: [cyan]{docling_config}[/cyan]")
 
         # Create backend instance
         backend_obj: Backend

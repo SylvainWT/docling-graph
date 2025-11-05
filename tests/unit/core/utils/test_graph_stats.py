@@ -5,7 +5,7 @@ Tests for graph statistics utilities.
 import networkx as nx
 import pytest
 
-from docling_graph.core.utils.graph_stats import (
+from docling_graph.core.utils.stats_calculator import (
     calculate_graph_stats,
     get_edge_type_distribution,
     get_node_type_distribution,

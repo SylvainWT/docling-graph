@@ -7,7 +7,7 @@ from pathlib import Path
 import networkx as nx
 import pytest
 
-from docling_graph.core.base.models import GraphMetadata
+from docling_graph.core.converters.models import GraphMetadata
 from docling_graph.core.visualizers.report_generator import ReportGenerator
 
 

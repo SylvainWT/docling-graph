@@ -4,7 +4,7 @@ from typing import Dict
 
 import networkx as nx
 
-from ..base.models import GraphMetadata
+from ..converters.models import GraphMetadata
 
 
 def calculate_graph_stats(graph: nx.DiGraph, source_model_count: int) -> GraphMetadata:

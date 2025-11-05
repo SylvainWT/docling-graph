@@ -10,7 +10,7 @@ from typing import Optional, Type
 from pydantic import BaseModel, ValidationError
 from rich import print as rich_print
 
-from ....llm_clients.llm_base import BaseLlmClient
+from ....llm_clients.base import BaseLlmClient
 from ....llm_clients.prompts import get_prompt
 
 
@@ -92,11 +92,8 @@ class LlmBackend:
                 return None
 
         except Exception as e:
-            rich_print(f"[red]Error during LLM extraction for {context}:[/red] {e}")
-            import traceback
-
-            traceback.print_exc()
-            return None
+            rich_print(f"[red]Error during LLM extraction for {context}:[/red] {type(e).__name__}: {e}")
+            return {}
 
     def cleanup(self) -> None:
         """Clean up LLM client resources."""

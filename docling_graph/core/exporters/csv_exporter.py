@@ -6,7 +6,7 @@ from typing import Optional, cast
 import networkx as nx
 import pandas as pd
 
-from ..base.config import ExportConfig
+from ..converters.config import ExportConfig
 
 
 class CSVExporter:

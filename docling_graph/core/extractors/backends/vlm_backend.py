@@ -124,11 +124,8 @@ class VlmBackend:
             return extracted_objects
 
         except Exception as e:
-            rich_print(f"[red]Error during VLM extraction:[/red] {e}")
-            import traceback
-
-            traceback.print_exc()
-            return []
+            rich_print(f"[red]Error during VLM extraction:[/red] {type(e).__name__}: {e}")
+            return {}
 
     def cleanup(self) -> None:
         """Clean up GPU memory and release resources."""

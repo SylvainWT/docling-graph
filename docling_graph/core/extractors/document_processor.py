@@ -3,9 +3,8 @@ Shared document processing utilities.
 """
 
 import gc
-from typing import Any, List
+from typing import Any, List, Optional
 
-from docling.datamodel import vlm_model_specs
 from docling.datamodel.accelerator_options import AcceleratorDevice, AcceleratorOptions
 from docling.datamodel.base_models import InputFormat
 from docling.datamodel.pipeline_options import (
@@ -17,11 +16,17 @@ from docling.pipeline.vlm_pipeline import VlmPipeline
 from docling_core.types.doc import DoclingDocument
 from rich import print as rich_print
 
+from .chunker import DocumentChunker
+
 
 class DocumentProcessor:
-    """Handles document conversion to Markdown format."""
+    """Handles document conversion to Markdown format and chunking."""
 
-    def __init__(self, docling_config: str = "ocr") -> None:
+    def __init__(
+        self,
+        docling_config: str = "ocr",
+        chunker_config: Optional[dict] = None,
+    ) -> None:
         """
         Initialize document processor with specified pipeline.
 
@@ -29,8 +34,28 @@ class DocumentProcessor:
             docling_config (str): Either "vision" or "ocr" by default.
                 vision: Uses VLM pipeline for complex layouts.
                 ocr: Uses classic OCR pipeline for standard documents.
+            chunker_config (dict): Configuration for DocumentChunker.
+                Example: {
+                    "tokenizer_name": "mistralai/Mistral-7B-Instruct-v0.2",
+                    "max_tokens": 4096,
+                    "merge_peers": True
+                }
+                Or use provider shortcut:
+                {
+                    "provider": "mistral",
+                    "merge_peers": True
+                }
         """
         self.docling_config = docling_config
+
+        # Initialize chunker if config provided
+        self.chunker = None
+        if chunker_config:
+            self.chunker = DocumentChunker(**chunker_config)
+            rich_print(
+                f"[blue][DocumentProcessor][/blue] Initialized chunker with "
+                f"configuration: {self.chunker.get_config_summary()}"
+            )
 
         if docling_config == "vision":
             # VLM Pipeline - Best for complex layouts and images
@@ -87,6 +112,45 @@ class DocumentProcessor:
         )
         return result.document
 
+    def extract_chunks(
+        self, document: DoclingDocument, with_stats: bool = False
+    ) -> Any:
+        """
+        Extract structure-aware chunks from document using HybridChunker.
+
+        This replaces naive text splitting with semantic chunking that preserves:
+        - Tables
+        - Lists
+        - Section hierarchies
+        - Semantic boundaries
+
+        Args:
+            document: DoclingDocument from convert_to_markdown()
+            with_stats: If True, return (chunks, stats). If False, return just chunks.
+
+        Returns:
+            List of contextualized text chunks (or tuple with stats if with_stats=True)
+        """
+        if not self.chunker:
+            raise ValueError(
+                "Chunker not initialized. Pass chunker_config to __init__() to enable chunking."
+            )
+
+        if with_stats:
+            chunks, stats = self.chunker.chunk_document_with_stats(document)
+            rich_print(
+                f"[blue][DocumentProcessor][/blue] Created [cyan]{stats['total_chunks']}[/cyan] chunks "
+                f"(avg: {stats['avg_tokens']:.0f} tokens, max: {stats['max_tokens_in_chunk']} tokens)"
+            )
+            return chunks, stats
+        else:
+            chunks = self.chunker.chunk_document(document)
+            rich_print(
+                f"[blue][DocumentProcessor][/blue] Created [cyan]{len(chunks)}[/cyan] "
+                "structure-aware chunks"
+            )
+            return chunks
+
     def extract_page_markdowns(self, document: DoclingDocument) -> List[str]:
         """
         Extracts Markdown content for each page.
@@ -98,8 +162,6 @@ class DocumentProcessor:
             List[str]: List of Markdown strings, one per page.
         """
         page_markdowns = []
-        # Pages are indexed in the document.pages dict
-        # They may start at 0 or 1 depending on the pipeline
         for page_no in sorted(document.pages.keys()):
             md = document.export_to_markdown(page_no=page_no)
             page_markdowns.append(md)
@@ -121,9 +183,32 @@ class DocumentProcessor:
         Returns:
             List of Markdown strings, one per page.
         """
-        rich_print("[blue][DocumentProcessor][/blue] Processing document into per-page markdowns")
+        rich_print(
+            "[blue][DocumentProcessor][/blue] Processing document into per-page markdowns"
+        )
         document = self.convert_to_markdown(source)
         return self.extract_page_markdowns(document)
+
+    def process_document_with_chunking(self, source: str) -> List[str]:
+        """
+        Process document with structure-aware chunking instead of page-by-page.
+
+        This is the recommended approach for LLM extraction as it:
+        - Preserves tables and lists
+        - Respects semantic boundaries
+        - Optimizes for context window usage
+
+        Args:
+            source: Path to the source document.
+
+        Returns:
+            List of structure-aware text chunks
+        """
+        rich_print(
+            "[blue][DocumentProcessor][/blue] Processing document with structure-aware chunking"
+        )
+        document = self.convert_to_markdown(source)
+        return self.extract_chunks(document)
 
     def extract_full_markdown(self, document: DoclingDocument) -> str:
         """

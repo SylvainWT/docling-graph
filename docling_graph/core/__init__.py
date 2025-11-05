@@ -6,9 +6,9 @@ and provides export and visualization capabilities.
 """
 
 from ..config import PipelineConfig
-from .base.config import ExportConfig, GraphConfig
-from .base.converter import GraphConverter
-from .base.models import Edge, GraphMetadata
+from .converters.config import ExportConfig, GraphConfig
+from .converters.base import GraphConverter
+from .converters.models import Edge, GraphMetadata
 from .exporters.csv_exporter import CSVExporter
 from .exporters.cypher_exporter import CypherExporter
 from .exporters.docling_exporter import DoclingExporter

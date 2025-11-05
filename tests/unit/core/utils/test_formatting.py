@@ -4,7 +4,7 @@ Tests for string formatting utilities.
 
 import pytest
 
-from docling_graph.core.utils.formatting import (
+from docling_graph.core.utils.string_formatter import (
     format_property_key,
     format_property_value,
     truncate_string,

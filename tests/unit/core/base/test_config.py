@@ -4,7 +4,7 @@ Tests for graph configuration classes.
 
 import pytest
 
-from docling_graph.core.base.config import ExportConfig, GraphConfig
+from docling_graph.core.converters.config import ExportConfig, GraphConfig
 
 
 class TestGraphConfig:

@@ -142,20 +142,20 @@ def convert_command(
 
     # Display configuration
     rich_print("\n[bold]Configuration:[/bold]")
-    rich_print(f" Source: [cyan]{source}[/cyan]")
-    rich_print(f" Template: [cyan]{template}[/cyan]")
-    rich_print(f" Docling Pipeline: [cyan]{docling_pipeline_val}[/cyan]")
-    rich_print(f" Processing: [cyan]{processing_mode_val}[/cyan]")
-    rich_print(f" Backend: [cyan]{backend_val}[/cyan]")
-    rich_print(f" Inference: [cyan]{inference_val}[/cyan]")
-    rich_print(f" Export: [cyan]{export_format_val}[/cyan]")
-    rich_print(f" Reverse edges: [cyan]{reverse_edges}[/cyan]")
+    rich_print(f" • Source: [cyan]{source}[/cyan]")
+    rich_print(f" • Template: [cyan]{template}[/cyan]")
+    rich_print(f" • Docling Pipeline: [cyan]{docling_pipeline_val}[/cyan]")
+    rich_print(f" • Processing: [cyan]{processing_mode_val}[/cyan]")
+    rich_print(f" • Backend: [cyan]{backend_val}[/cyan]")
+    rich_print(f" • Inference: [cyan]{inference_val}[/cyan]")
+    rich_print(f" • Export: [cyan]{export_format_val}[/cyan]")
+    rich_print(f" • Reverse edges: [cyan]{reverse_edges}[/cyan]")
 
     # Display Docling export settings
     rich_print("\n[bold]Docling Export:[/bold]")
-    rich_print(f" Document JSON: [cyan]{final_export_docling_json}[/cyan]")
-    rich_print(f" Markdown: [cyan]{final_export_markdown}[/cyan]")
-    rich_print(f" Per-page MD: [cyan]{final_export_per_page}[/cyan]")
+    rich_print(f" • Document JSON: [cyan]{final_export_docling_json}[/cyan]")
+    rich_print(f" • Markdown: [cyan]{final_export_markdown}[/cyan]")
+    rich_print(f" • Per-page MD: [cyan]{final_export_per_page}[/cyan]")
 
     # Build typed config
     cfg = PipelineConfig(

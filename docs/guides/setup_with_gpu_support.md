@@ -21,11 +21,14 @@ If you need GPU support, follow these manual steps:
 
 2. **Install your project in editable mode:**
 
-   Navigate to the root directory of your project (where `setup.py` or `pyproject.toml` is), then run:
+   Navigate to the root directory of your project (where `pyproject.toml` is), then run the command that matches your use case:
 
-   ```bash
-   pip install -e .
-   ```
+   | Option          | Command                   | Description                                                         |
+   | :---            | :---                      | :---                                                                |
+   | **Minimal**     | `pip install -e .`                 | Includes core VLM features (Docling), **no** LLM inference          |
+   | **Full**        | `pip install -e .[all]`     | Includes **all** features, VLM, and all local/remote LLM providers  |
+   | **Local LLM**   | `pip install -e .[local]`   | Adds support for vLLM and Ollama (requires GPU for vLLM)            |
+   | **Remote API**  | `pip install -e .[remote]`  | Adds support for Mistral, OpenAI, and Google Gemini APIs            |
 
 3. **Uninstall CPU-only PyTorch packages:**
 

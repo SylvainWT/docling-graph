@@ -8,7 +8,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from docling_graph.llm_clients.llm_base import BaseLlmClient
+from docling_graph.llm_clients.base import BaseLlmClient
 
 
 class ConcreteClient(BaseLlmClient):

@@ -4,7 +4,7 @@ LLM Clients module with lazy imports for optional dependencies.
 
 from typing import Type
 
-from .llm_base import BaseLlmClient
+from .base import BaseLlmClient
 
 __all__ = ["BaseLlmClient", "get_client"]
 

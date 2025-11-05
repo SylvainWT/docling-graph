@@ -112,9 +112,6 @@ def inspect_command(
                 "\n[blue]Tip:[/blue] Open the HTML file in your browser to view the visualization"
             )
 
-    except Exception as err:
-        rich_print(f"\n[bold red]Error:[/bold red] {err}")
-        import traceback
-
-        traceback.print_exc()
-        raise typer.Exit(code=1) from err
+    except Exception as e:
+        rich_print(f"[bold red]Error:[/ boldred] {type(e).__name__}: {e}")
+        return {}

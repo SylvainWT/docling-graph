@@ -1,6 +1,5 @@
 """
 Ollama (local LLM) client implementation.
-
 Based on https://ollama.com/blog/structured-outputs
 """
 
@@ -9,7 +8,8 @@ from typing import Any, Dict, cast
 
 from rich import print as rich_print
 
-from .llm_base import BaseLlmClient
+from .base import BaseLlmClient
+from .config import get_context_limit
 
 # Requires `pip install ollama`
 # Make the lazy import optional to satisfy type checkers when assigning None
@@ -29,6 +29,7 @@ except ImportError:
 ollama: Any = _ollama
 
 
+
 class OllamaClient(BaseLlmClient):
     """Ollama (local LLM) implementation with proper message structure."""
 
@@ -40,12 +41,8 @@ class OllamaClient(BaseLlmClient):
 
         self.model = model
 
-        # Context limits for different models
-        model_context_limits = {"llama3.1:8b": 128000, "llama3.2:3b": 128000, "mixtral:8x7b": 32000}
-
-        # Extract base model name for lookup
-        base_model = model.split(":")[0] + ":" + model.split(":")[1] if ":" in model else model
-        self._context_limit = model_context_limits.get(base_model, 8000)
+        # Use centralized config registry (ollama provider)
+        self._context_limit = get_context_limit("ollama", model)
 
         try:
             rich_print(f"[OllamaClient] Checking Ollama connection and model '{self.model}'...")
@@ -118,10 +115,7 @@ class OllamaClient(BaseLlmClient):
                 return {}
 
         except Exception as e:
-            rich_print(f"[red]Error:[/red] Ollama API call failed: {e}")
-            import traceback
-
-            traceback.print_exc()
+            rich_print(f"[red]Error:[/red] Ollama API call failed: {type(e).__name__}: {e}")
             return {}
 
     @property

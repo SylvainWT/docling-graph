@@ -6,7 +6,7 @@ from typing import Any, Dict, Optional, TextIO, cast
 
 import networkx as nx
 
-from ..base.config import ExportConfig
+from ..converters.config import ExportConfig
 
 
 class CypherExporter:

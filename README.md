@@ -1,6 +1,6 @@
 <p align="center"><br>
   <a href="https://github.com/ayoub-ibm/docling-graph">
-    <img loading="lazy" alt="Docling Graph" src="docs/assets/logo.png" width="300"/>
+    <img loading="lazy" alt="Docling Graph" src="docs/assets/logo.png" width="280"/>
   </a>
 </p>
 
@@ -9,6 +9,7 @@
 [![Docs](https://img.shields.io/badge/Docs-coming%20soon-brightgreen)](https://github.com/ayoub-ibm/docling-graph)
 [![Docling](https://img.shields.io/badge/Docling-VLM-red)](https://github.com/docling-project/docling)
 [![Python 3.10 | 3.11 | 3.12](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12-blue)](https://www.python.org/downloads/)
+[![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/astral-sh/uv)
 [![NetworkX](https://img.shields.io/badge/NetworkX-3.0+-red)](https://networkx.org/)
 [![Pydantic v2](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/pydantic/pydantic/main/docs/badge/v2.json)](https://pydantic.dev)
 [![Mypy](https://img.shields.io/badge/Type--checked-mypy-blue?logo=python&logoColor=white)](https://mypy.readthedocs.io/en/stable)
@@ -16,7 +17,6 @@
 [![Rich](https://img.shields.io/badge/Rich-terminal-purple)](https://github.com/Textualize/rich)
 [![vLLM](https://img.shields.io/badge/vLLM-compatible-brightgreen)](https://vllm.ai/)
 [![Ollama](https://img.shields.io/badge/Ollama-compatible-brightgreen)](https://ollama.ai/)
-[![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/astral-sh/uv)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![License MIT](https://img.shields.io/github/license/ayoub-ibm/docling-graph)](https://opensource.org/licenses/MIT)
 [![LF AI & Data](https://img.shields.io/badge/LF%20AI%20%26%20Data-003778?logo=linuxfoundation&logoColor=fff&color=0094ff&labelColor=003778)](https://lfaidata.foundation/projects/)

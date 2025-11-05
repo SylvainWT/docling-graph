@@ -5,9 +5,9 @@ from typing import Optional, cast
 
 import networkx as nx
 
-from ..base.models import GraphMetadata
-from ..utils.formatting import format_property_key, format_property_value
-from ..utils.graph_stats import calculate_graph_stats
+from ..converters.models import GraphMetadata
+from ..utils.string_formatter import format_property_key, format_property_value
+from ..utils.stats_calculator import calculate_graph_stats
 
 
 class ReportGenerator:

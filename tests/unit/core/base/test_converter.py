@@ -10,9 +10,9 @@ import networkx as nx
 import pytest
 from pydantic import BaseModel, ConfigDict, Field
 
-from docling_graph.core.base.config import GraphConfig
-from docling_graph.core.base.converter import GraphConverter
-from docling_graph.core.base.models import GraphMetadata
+from docling_graph.core.converters.config import GraphConfig
+from docling_graph.core.converters.base import GraphConverter
+from docling_graph.core.converters.models import GraphMetadata
 
 
 # Test Models

@@ -8,7 +8,7 @@ import networkx as nx
 import pandas as pd
 import pytest
 
-from docling_graph.core.base.config import ExportConfig
+from docling_graph.core.converters.config import ExportConfig
 from docling_graph.core.exporters.csv_exporter import CSVExporter
 
 

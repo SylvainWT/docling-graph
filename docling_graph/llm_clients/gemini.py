@@ -1,6 +1,5 @@
 """
 Google Gemini API client implementation.
-
 Based on https://ai.google.dev/gemini-api/docs/structured-output
 """
 
@@ -11,7 +10,8 @@ from typing import Any, Dict
 from dotenv import load_dotenv
 from rich import print as rich_print
 
-from .llm_base import BaseLlmClient
+from .base import BaseLlmClient
+from .config import get_context_limit
 
 # Load environment variables
 load_dotenv()
@@ -39,13 +39,13 @@ genai: Any = _genai
 types: Any = _genai_types
 
 
+
 class GeminiClient(BaseLlmClient):
     """Google Gemini API implementation with proper JSON response format."""
 
     def __init__(self, model: str) -> None:
         self.model = model
         self.api_key = os.getenv("GEMINI_API_KEY")
-
         if not self.api_key:
             raise ValueError(
                 "[GeminiClient] [red]Error:[/red] GEMINI_API_KEY not set. "
@@ -55,15 +55,9 @@ class GeminiClient(BaseLlmClient):
         # Initialize Gemini client
         self.client = genai.Client(api_key=self.api_key)
 
-        # Context limits for different models
-        model_context_limits = {
-            "gemini-1.5-flash": 1000000,
-            "gemini-1.5-pro": 1000000,
-            "gemini-2.0-flash": 1000000,
-            "gemini-2.5-pro": 1000000,
-        }
+        # Use centralized config registry
+        self._context_limit = get_context_limit("google", model)
 
-        self._context_limit = model_context_limits.get(model, 1000000)
         rich_print(f"[GeminiClient] Initialized for [blue]{self.model}[/blue]")
 
     def get_json_response(self, prompt: str | dict[str, str], schema_json: str) -> Dict[str, Any]:
@@ -124,10 +118,7 @@ class GeminiClient(BaseLlmClient):
                 return {}
 
         except Exception as e:
-            rich_print(f"[red]Error:[/red] Gemini API call failed: {e}")
-            import traceback
-
-            traceback.print_exc()
+            rich_print(f"[red]Error:[/red] Gemini API call failed: {type(e).__name__}: {e}")
             return {}
 
     @property
