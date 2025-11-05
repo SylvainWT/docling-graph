@@ -2,7 +2,7 @@
 Factory for creating extractors based on configuration.
 """
 
-from typing import Literal
+from typing import Any, Literal
 
 from rich import print as rich_print
 
@@ -69,19 +69,23 @@ class ExtractorFactory:
         # Create strategy with docling_config
         extractor: BaseExtractor
 
-        strategy_args = {
-            "backend": backend_obj,
-            "docling_config": docling_config,
-            "use_chunking": use_chunking,
-        }
-
-        # Only pass llm_consolidation if backend is llm
-        if backend_name == "llm":
-            strategy_args["llm_consolidation"] = llm_consolidation
-
         if processing_mode == "one-to-one":
-            extractor = OneToOneStrategy(**strategy_args)
+            # OneToOneStrategy only takes backend and docling_config
+            # It doesn't use chunking or consolidation args
+            extractor = OneToOneStrategy(
+                backend=backend_obj,
+                docling_config=docling_config,
+            )
         elif processing_mode == "many-to-one":
+            # Build args specifically for ManyToOne
+            strategy_args: dict[str, Any] = {
+                "backend": backend_obj,
+                "docling_config": docling_config,
+                "use_chunking": use_chunking,
+            }
+            if backend_name == "llm":
+                strategy_args["llm_consolidation"] = llm_consolidation
+
             extractor = ManyToOneStrategy(**strategy_args)
         else:
             raise ValueError(f"Unknown processing_mode: {processing_mode}")

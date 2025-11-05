@@ -114,4 +114,4 @@ def inspect_command(
 
     except Exception as e:
         rich_print(f"[bold red]Error:[/ boldred] {type(e).__name__}: {e}")
-        return {}
+        return None

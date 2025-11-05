@@ -10,7 +10,7 @@ Preserves:
 Configurable per LLM provider tokenizer.
 """
 
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from docling.chunking import HybridChunker
 from docling_core.transforms.chunker.tokenizer.huggingface import HuggingFaceTokenizer
@@ -40,6 +40,8 @@ class DocumentChunker:
 
         Now uses centralized llm_config.py registry.
         """
+        self.tokenizer: Union[HuggingFaceTokenizer, OpenAITokenizer]
+
         # Step 1: Determine tokenizer name
         if tokenizer_name is None and provider is not None:
             tokenizer_name = get_tokenizer_for_provider(provider)

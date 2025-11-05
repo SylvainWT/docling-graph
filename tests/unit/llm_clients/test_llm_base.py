@@ -3,7 +3,7 @@ Tests for LLM base client interface.
 """
 
 from abc import ABC
-from typing import Any, Dict
+from typing import Any, Dict, Mapping
 from unittest.mock import MagicMock
 
 import pytest
@@ -18,7 +18,9 @@ class ConcreteClient(BaseLlmClient):
         self.model = model
         self._context_limit = 4096
 
-    def get_json_response(self, prompt: str | dict, schema_json: str) -> Dict[str, Any]:
+    def get_json_response(
+        self, prompt: str | Mapping[str, str], schema_json: str
+    ) -> Dict[str, Any]:
         return {"result": "test"}
 
     @property

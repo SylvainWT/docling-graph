@@ -6,7 +6,7 @@ for backends, extractors, and clients. Using Protocols instead of abstract
 base classes provides better type checking and duck typing support.
 """
 
-from typing import Any, Dict, List, Optional, Protocol, Type, TypeGuard, runtime_checkable
+from typing import Any, Dict, List, Mapping, Optional, Protocol, Type, TypeGuard, runtime_checkable
 
 from pydantic import BaseModel
 
@@ -51,7 +51,11 @@ class TextExtractionBackendProtocol(Protocol):
     client: Any  # LLM client instance
 
     def extract_from_markdown(
-        self, markdown: str, template: Type[BaseModel], context: str = "document"
+        self,
+        markdown: str,
+        template: Type[BaseModel],
+        context: str = "document",
+        is_partial: bool = False,
     ) -> Optional[BaseModel]:
         """Extract structured data from markdown content.
 
@@ -63,6 +67,15 @@ class TextExtractionBackendProtocol(Protocol):
         Returns:
             Extracted and validated model instance, or None if extraction failed.
         """
+        ...
+
+    def consolidate_from_pydantic_models(
+        self,
+        raw_models: List[BaseModel],
+        programmatic_model: BaseModel,
+        template: Type[BaseModel],
+    ) -> Optional[BaseModel]:
+        """Consolidate multiple models using the LLM."""
         ...
 
     def cleanup(self) -> None:
@@ -90,7 +103,9 @@ class LLMClientProtocol(Protocol):
         """
         ...
 
-    def get_json_response(self, prompt: str | dict[str, str], schema_json: str) -> Dict[str, Any]:
+    def get_json_response(
+        self, prompt: str | Mapping[str, str], schema_json: str
+    ) -> Dict[str, Any]:
         """Execute LLM call and return parsed JSON.
 
         Args:

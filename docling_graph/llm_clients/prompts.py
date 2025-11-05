@@ -6,6 +6,8 @@ from document markdown using LLMs.
 
 from typing import TypedDict
 
+from pydantic import BaseModel, Field
+
 
 class PromptDict(TypedDict):
     """Type definition for prompt dictionaries."""
@@ -126,7 +128,7 @@ def get_extraction_prompt(
 def get_consolidation_prompt(
     schema_json: str,
     raw_models: list,
-    programmatic_model: object | None = None,
+    programmatic_model: BaseModel | None = None,
 ) -> str:
     """Generate the prompt for LLM-based consolidation.
 

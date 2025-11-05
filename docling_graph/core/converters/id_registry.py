@@ -7,7 +7,7 @@ even when extracted in different batches.
 
 import hashlib
 import json
-from typing import Dict, Optional, Set
+from typing import Dict, List, Optional, Set, cast
 
 from pydantic import BaseModel
 
@@ -47,11 +47,11 @@ class NodeIDRegistry:
         model_config = model_instance.model_config
 
         # Get graph_id_fields from config
-        id_fields = []
+        id_fields: List[str] = []
         if hasattr(model_config, "get"):
-            id_fields = model_config.get("graph_id_fields", [])
+            id_fields = cast(List[str], model_config.get("graph_id_fields", []))
         else:
-            id_fields = getattr(model_config, "graph_id_fields", [])
+            id_fields = cast(List[str], getattr(model_config, "graph_id_fields", []))
 
         # Build fingerprint from identity fields
         fingerprint_data = {}

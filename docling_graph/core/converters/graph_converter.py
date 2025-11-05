@@ -6,7 +6,7 @@ into directed graphs with nodes and edges, including features like stable node
 IDs, edge metadata, bidirectional edges, and automatic cleanup.
 """
 
-from typing import List, Optional, Set
+from typing import Any, List, Mapping, Optional, Set
 
 import networkx as nx
 from pydantic import BaseModel
@@ -168,7 +168,7 @@ class GraphConverter:
         visited_ids.add(node_id)
 
         # Prepare node attributes
-        node_attrs = {
+        node_attrs: dict[str, Any] = {
             "id": node_id,
             "label": model.__class__.__name__,
             "type": "entity",
@@ -251,8 +251,10 @@ class GraphConverter:
         Looks for json_schema_extra['edge_label'] in field info.
         """
         field_info = model.model_fields.get(field_name)
-        if field_info and field_info.json_schema_extra:
-            return field_info.json_schema_extra.get("edge_label")
+        if field_info and isinstance(field_info.json_schema_extra, Mapping):
+            value = field_info.json_schema_extra.get("edge_label")
+            if isinstance(value, str):
+                return value
         return None
 
     def set_registry(self, registry: NodeIDRegistry) -> None:
