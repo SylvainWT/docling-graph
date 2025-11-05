@@ -52,7 +52,7 @@ class MistralClient(BaseLlmClient):
 
         rich_print(f"[MistralClient] Initialized for [blue]{self.model}[/blue]")
 
-    def get_json_response(self, prompt: str | dict, schema_json: str) -> Dict[str, Any]:
+    def get_json_response(self, prompt: str | dict[str, str], schema_json: str) -> Dict[str, Any]:
         """
         Execute Mistral chat.complete with proper message structure.
         Official example: https://docs.mistral.ai/api/endpoint/chat

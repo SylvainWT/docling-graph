@@ -54,7 +54,7 @@ class OllamaClient(BaseLlmClient):
             rich_print(f"  2. Model is available: ollama pull {self.model}")
             raise RuntimeError(str(e)) from e
 
-    def get_json_response(self, prompt: str | dict, schema_json: str) -> Dict[str, Any]:
+    def get_json_response(self, prompt: str | dict[str, str], schema_json: str) -> Dict[str, Any]:
         """
         Execute Ollama chat with JSON format.
 

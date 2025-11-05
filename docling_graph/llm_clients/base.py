@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Mapping
+from typing import Any, Dict
 
 
 class BaseLlmClient(ABC):
@@ -23,7 +23,7 @@ class BaseLlmClient(ABC):
 
         Args:
             prompt (str | dict[str, str]): The full prompt to send to the model (legacy string or structured dict).
-            schema_json (str): The Pydantic schema (for models that support it).
+            schema_json (str): The Pantic schema (for models that support it).
 
         Returns:
             Dict[str, Any]: The parsed JSON dictionary from the LLM.

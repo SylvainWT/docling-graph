@@ -24,7 +24,7 @@ from .core import (
     PipelineConfig,
     ReportGenerator,
 )
-from .core.converters.id_registry import NodeIDRegistry
+from .core.converters.node_id_registry import NodeIDRegistry
 
 # Import LLM clients
 from .llm_clients import BaseLlmClient, get_client

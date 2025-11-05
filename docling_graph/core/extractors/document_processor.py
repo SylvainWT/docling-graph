@@ -3,7 +3,7 @@ Shared document processing utilities.
 """
 
 import gc
-from typing import Any, List, Optional, overload
+from typing import Any, List, Literal, Optional, overload
 
 from docling.datamodel.accelerator_options import AcceleratorDevice, AcceleratorOptions
 from docling.datamodel.base_models import InputFormat
@@ -114,11 +114,13 @@ class DocumentProcessor:
 
     @overload
     def extract_chunks(
-        self, document: DoclingDocument, with_stats: bool = True
+        self, document: DoclingDocument, with_stats: Literal[True]
     ) -> tuple[List[str], dict]: ...
 
     @overload
-    def extract_chunks(self, document: DoclingDocument, with_stats: bool = False) -> List[str]: ...
+    def extract_chunks(
+        self, document: DoclingDocument, with_stats: Literal[False] = False
+    ) -> List[str]: ...
 
     def extract_chunks(self, document: DoclingDocument, with_stats: bool = False) -> Any:
         """

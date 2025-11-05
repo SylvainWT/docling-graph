@@ -9,7 +9,24 @@ from pathlib import Path
 from typing import Any, Dict, Literal, Optional, Union
 
 from pydantic import BaseModel, Field, field_validator, model_validator
-from typing_extensions import Self  # <-- use typing_extensions for Self
+from typing_extensions import Self
+
+
+class BackendConfig(BaseModel):
+    """Configuration for an extraction backend."""
+    provider: str = Field(..., description="Backend provider (e.g., 'ollama', 'mistral', 'vlm')")
+    model: str = Field(..., description="Model name or path")
+    api_key: Optional[str] = Field(None, description="API key, if required")
+    base_url: Optional[str] = Field(None, description="Base URL for API, if required")
+
+
+class ExtractorConfig(BaseModel):
+    """Configuration for the extraction strategy."""
+    strategy: Literal["many-to-one", "one-to-one"] = Field(default="many-to-one")
+    docling_config: Literal["ocr", "vision"] = Field(default="ocr")
+    use_chunking: bool = Field(default=True)
+    llm_consolidation: bool = Field(default=False)
+    chunker_config: Optional[Dict[str, Any]] = Field(default=None)
 
 
 class ModelConfig(BaseModel):

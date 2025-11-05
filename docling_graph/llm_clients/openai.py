@@ -52,7 +52,7 @@ class OpenAIClient(BaseLlmClient):
 
         rich_print(f"[OpenAIClient] Initialized for [blue]{self.model}[/blue]")
 
-    def get_json_response(self, prompt: str | dict, schema_json: str) -> Dict[str, Any]:
+    def get_json_response(self, prompt: str | dict[str, str], schema_json: str) -> Dict[str, Any]:
         """
         Execute OpenAI chat completion with JSON mode.
         Official docs: https://platform.openai.com/docs/guides/structured-outputs

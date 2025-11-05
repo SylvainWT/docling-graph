@@ -68,7 +68,7 @@ class VllmClient(BaseLlmClient):
             rich_print("\n[dim]On Windows: Run vLLM server in WSL2 or Docker[/dim]")
             raise
 
-    def get_json_response(self, prompt: str | dict, schema_json: str) -> Dict[str, Any]:
+    def get_json_response(self, prompt: str | dict[str, str], schema_json: str) -> Dict[str, Any]:
         """
         Execute vLLM chat with JSON format using OpenAI-compatible API.
 

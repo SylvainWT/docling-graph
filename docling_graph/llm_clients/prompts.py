@@ -98,7 +98,7 @@ def get_extraction_prompt(
     markdown_content: str,
     schema_json: str,
     is_partial: bool = False,
-) -> PromptDict:
+) -> dict[str, str]:
     """Generate system and user prompts for LLM extraction.
 
     Args:
