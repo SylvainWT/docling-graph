@@ -110,7 +110,8 @@ class Person(BaseModel):
 
     # --- Validators ---
     @field_validator("given_names", mode="before")
-    def ensure_list(self, v: Any) -> Any:
+    @classmethod
+    def ensure_list(cls, v: Any) -> Any:
         """Ensure given_names is always a list."""
         if isinstance(v, str):
             # Handle comma-separated or space-separated names

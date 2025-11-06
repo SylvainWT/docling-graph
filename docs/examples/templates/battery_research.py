@@ -724,7 +724,8 @@ class Experiment(BaseModel):
     )
 
     @field_validator("limitations", mode="before")
-    def coerce_limitations(self, v: Any) -> List[str]:
+    @classmethod
+    def coerce_limitations(cls, v: Any) -> List[str]:
         if v is None:
             return []
         if isinstance(v, str):
