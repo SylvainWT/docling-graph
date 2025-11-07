@@ -246,7 +246,7 @@ def run_pipeline(config: Union[PipelineConfig, Dict[str, Any]]) -> None:
         )
         rich_print(f"[green]→[/green] Generated markdown report at {report_path}")
 
-        html_path = output_dir / f"{base_name}_graph"
+        html_path = output_dir / f"{base_name}_graph.html"
         InteractiveVisualizer().save_cytoscape_graph(knowledge_graph, html_path)
         rich_print(f"[green]→[/green] Generated interactive HTML graph at {html_path}")
 

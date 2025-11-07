@@ -6,6 +6,7 @@ import json
 import os
 import webbrowser
 from collections import Counter
+from datetime import date, datetime
 from pathlib import Path
 from typing import Any, Optional, Tuple
 
@@ -13,6 +14,8 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 from rich import print as rich_print
+
+from ..utils.string_formatter import DateTimeEncoder
 
 
 class InteractiveVisualizer:
@@ -279,7 +282,7 @@ class InteractiveVisualizer:
             html_template = self._get_default_template()
 
         # Inject the graph data with proper JSON serialization
-        elements_json = json.dumps(elements, indent=2, ensure_ascii=False)
+        elements_json = json.dumps(elements, indent=2, ensure_ascii=False, cls=DateTimeEncoder)
 
         # Replace the placeholder with the actual JavaScript variable declaration
         html_content = html_template.replace(

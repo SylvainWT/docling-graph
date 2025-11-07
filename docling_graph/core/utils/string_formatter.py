@@ -1,6 +1,8 @@
 """String formatting utilities for graph display."""
 
+import json
 import re
+from datetime import date, datetime
 from typing import Any
 
 
@@ -68,3 +70,25 @@ def truncate_string(text: str, max_length: int, suffix: str = "...") -> str:
         return text
 
     return text[: max_length - len(suffix)] + suffix
+
+
+def json_serializable(obj: Any) -> Any:
+    """
+    Custom JSON serializer for objects not serializable by default.
+    Converts date and datetime to ISO format strings.
+    Raises TypeError for other unknown types.
+    """
+    if isinstance(obj, date | datetime):
+        return obj.isoformat()
+    raise TypeError(f"Type {type(obj)} not serializable")
+
+
+class DateTimeEncoder(json.JSONEncoder):
+    """
+    JSONEncoder subclass that knows how to encode date and datetime types.
+    """
+
+    def default(self, obj: object) -> Any:
+        if isinstance(obj, date | datetime):
+            return obj.isoformat()
+        return super().default(obj)

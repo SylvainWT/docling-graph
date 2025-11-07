@@ -1,12 +1,14 @@
 """JSON exporter for graph serialization."""
 
 import json
+from datetime import date, datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, cast
 
 import networkx as nx
 
 from ..converters.config import ExportConfig
+from ..utils.string_formatter import json_serializable
 
 
 class JSONExporter:
@@ -39,7 +41,11 @@ class JSONExporter:
 
         with open(output_path, "w", encoding=self.config.JSON_ENCODING) as f:
             json.dump(
-                graph_dict, f, indent=self.config.JSON_INDENT, ensure_ascii=self.config.ENSURE_ASCII
+                graph_dict,
+                f,
+                indent=self.config.JSON_INDENT,
+                ensure_ascii=self.config.ENSURE_ASCII,
+                default=json_serializable,
             )
 
     def validate_graph(self, graph: nx.DiGraph) -> bool:
