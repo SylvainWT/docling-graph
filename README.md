@@ -1,12 +1,12 @@
 <p align="center"><br>
-  <a href="https://github.com/ayoub-ibm/docling-graph">
+  <a href="https://github.ibm.com/ibm-science-next/docling-graph">
     <img loading="lazy" alt="Docling Graph" src="docs/assets/logo.png" width="280"/>
   </a>
 </p>
 
 # Docling Graph
 
-[![Docs](https://img.shields.io/badge/Docs-coming%20soon-brightgreen)](https://github.com/ayoub-ibm/docling-graph)
+[![Docs](https://img.shields.io/badge/Docs-coming%20soon-brightgreen)](https://github.ibm.com/ibm-science-next/docling-graph)
 [![Docling](https://img.shields.io/badge/Docling-VLM-red)](https://github.com/docling-project/docling)
 [![Python 3.10 | 3.11 | 3.12](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12-blue)](https://www.python.org/downloads/)
 [![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/astral-sh/uv)
@@ -71,7 +71,7 @@ The toolkit supports two extraction families: **local VLM** via Docling and **LL
 #### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/ayoub-ibm/docling-graph
+git clone https://github.ibm.com/ibm-science-next/docling-graph
 cd docling-graph
 ```
 
