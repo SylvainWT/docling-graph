@@ -159,6 +159,15 @@ class GraphConverter:
         visited_ids: Set[str],
     ) -> None:
         """Recursively create nodes from model and nested entities."""
+        # Check if this model should be an entity (respect is_entity=False)
+        model_config = model.model_config
+        is_entity = model_config.get("is_entity", True) if hasattr(model_config, "get") \
+                    else getattr(model_config, "is_entity", True)
+        
+        if not is_entity:
+            # Skip node creation for non-entities (they will be embedded in parent nodes)
+            return
+        
         # Get node ID from registry
         node_id = self._get_node_id(model)
 
