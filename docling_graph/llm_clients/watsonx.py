@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 from rich import print as rich_print
 
 from .base import BaseLlmClient
+from .config import get_context_limit, get_model_config
 
 # Load environment variables
 load_dotenv()
@@ -78,16 +79,22 @@ class WatsonxClient(BaseLlmClient):
             project_id=self.project_id,
         )
 
-        # Context limits for different models
-        model_context_limits = {
-            "ibm-granite/granite-4.0-h-small": 128000,
-            "meta-llama/llama-3-70b-instruct": 32768,
-            "meta-llama/llama-3-8b-instruct": 32768,
-            "mistralai/mixtral-8x7b-instruct-v01": 32768,
-        }
-
-        self._context_limit = model_context_limits.get(model, 8192)
-        rich_print(f"[WatsonxClient] Initialized for [blue]{self.model}[/blue]")
+        # Get model configuration from centralized config
+        model_config = get_model_config("watsonx", model)
+        if model_config:
+            self._context_limit = model_config.context_limit
+            self._max_new_tokens = model_config.max_new_tokens
+            rich_print(f"[WatsonxClient] Initialized for [blue]{self.model}[/blue]")
+            rich_print(f"[WatsonxClient] Context: [cyan]{self._context_limit:,}[/cyan] tokens")
+            rich_print(f"[WatsonxClient] Max output: [cyan]{self._max_new_tokens:,}[/cyan] tokens")
+        else:
+            # Fallback for unknown models
+            self._context_limit = 8192
+            self._max_new_tokens = 2048
+            rich_print(f"[WatsonxClient] [yellow]Warning:[/yellow] Model '{model}' not in config, using defaults")
+            rich_print(f"[WatsonxClient] Context: [cyan]{self._context_limit:,}[/cyan] tokens")
+            rich_print(f"[WatsonxClient] Max output: [cyan]{self._max_new_tokens:,}[/cyan] tokens")
+        
         rich_print(f"[WatsonxClient] Using endpoint: [cyan]{self.url}[/cyan]")
 
     def get_json_response(self, prompt: str | dict, schema_json: str) -> Dict[str, Any]:
@@ -123,7 +130,7 @@ class WatsonxClient(BaseLlmClient):
             params = {
                 "decoding_method": "greedy",
                 "temperature": 0.1,  # Low temperature for consistent extraction
-                "max_new_tokens": 4096,
+                "max_new_tokens": self._max_new_tokens,
                 "min_new_tokens": 1,
                 "repetition_penalty": 1.0,
             }

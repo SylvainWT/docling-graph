@@ -34,11 +34,19 @@ class DocumentChunker:
         max_tokens: Optional[int] = None,
         provider: Optional[str] = None,
         merge_peers: bool = True,
+        schema_size: int = 0,
     ) -> None:
         """
         Initialize the chunker with smart defaults based on provider or custom tokenizer.
 
-        Now uses centralized llm_config.py registry.
+        Now uses centralized llm_config.py registry with dynamic adjustment based on schema complexity.
+        
+        Args:
+            tokenizer_name: Name of the tokenizer to use
+            max_tokens: Maximum tokens per chunk (if None, calculated from provider)
+            provider: LLM provider name (e.g., "watsonx", "openai")
+            merge_peers: Whether to merge peer sections in chunking
+            schema_size: Size of Pydantic schema JSON for dynamic chunk sizing
         """
         self.tokenizer: Union[HuggingFaceTokenizer, OpenAITokenizer]
 
@@ -49,10 +57,10 @@ class DocumentChunker:
         elif tokenizer_name is None:
             tokenizer_name = "sentence-transformers/all-MiniLM-L6-v2"
 
-        # Step 2: Determine max_tokens (using centralized lookup)
+        # Step 2: Determine max_tokens (using centralized lookup with schema awareness)
         if max_tokens is None:
             if provider is not None:
-                max_tokens = get_recommended_chunk_size(provider, "")  # Generic lookup
+                max_tokens = get_recommended_chunk_size(provider, "", schema_size)
             else:
                 max_tokens = 5120
 

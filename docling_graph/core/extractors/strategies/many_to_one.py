@@ -59,12 +59,32 @@ class ManyToOneStrategy(BaseExtractor):
         self.use_chunking = use_chunking
 
         # Auto-configure chunker based on backend if not provided
-        if use_chunking and chunker_config is None and hasattr(backend, "client"):
-            context_limit = getattr(backend.client, "context_limit", 8000)
-            content_ratio = getattr(backend.client, "content_ratio", 0.8)
-            # Reserve room for prompt/template overhead
-            max_tokens = int(context_limit * content_ratio)
-            chunker_config = {"max_tokens": max_tokens}
+        # Note: schema_size will be set dynamically in extract() method
+        if use_chunking and chunker_config is None:
+            # Provide minimal config - will be updated with schema_size later
+            if hasattr(backend, "client"):
+                # Try to get provider info from client
+                provider = None
+                client_name = backend.client.__class__.__name__.lower()  # type: ignore
+                if 'watsonx' in client_name:
+                    provider = 'watsonx'
+                elif 'openai' in client_name:
+                    provider = 'openai'
+                elif 'mistral' in client_name:
+                    provider = 'mistral'
+                elif 'ollama' in client_name:
+                    provider = 'ollama'
+                elif 'gemini' in client_name:
+                    provider = 'google'
+                
+                if provider:
+                    chunker_config = {"provider": provider}
+                else:
+                    # Fallback: use context limit if available
+                    context_limit = getattr(backend.client, "context_limit", 8000)  # type: ignore
+                    chunker_config = {"max_tokens": int(context_limit * 0.6)}
+            else:
+                chunker_config = {"max_tokens": 5120}
 
         self.doc_processor = DocumentProcessor(
             docling_config=docling_config,
@@ -196,6 +216,39 @@ class ManyToOneStrategy(BaseExtractor):
     ) -> List[BaseModel]:
         """Extract using structure-aware chunks with adaptive batching."""
         try:
+            # Update chunker with schema size for dynamic adjustment if not already configured
+            if self.doc_processor.chunker and hasattr(backend, "client"):
+                schema_size = len(template.model_json_schema())
+                # Recreate chunker with schema_size if it seems to be using defaults
+                # Check if max_tokens is the default 5120
+                if self.doc_processor.chunker.max_tokens == 5120:
+                    from ..document_chunker import DocumentChunker
+                    provider = None
+                    # Try to determine provider from backend client
+                    if hasattr(backend.client, '__class__'):
+                        client_name = backend.client.__class__.__name__.lower()
+                        if 'watsonx' in client_name:
+                            provider = 'watsonx'
+                        elif 'openai' in client_name:
+                            provider = 'openai'
+                        elif 'mistral' in client_name:
+                            provider = 'mistral'
+                        elif 'ollama' in client_name:
+                            provider = 'ollama'
+                        elif 'gemini' in client_name:
+                            provider = 'google'
+                    
+                    if provider:
+                        self.doc_processor.chunker = DocumentChunker(
+                            provider=provider,
+                            schema_size=schema_size,
+                            merge_peers=True
+                        )
+                        rich_print(
+                            f"[blue][ManyToOneStrategy][/blue] Updated chunker with schema size: "
+                            f"[cyan]{schema_size}[/cyan] bytes for provider: [yellow]{provider}[/yellow]"
+                        )
+            
             chunks = self.doc_processor.extract_chunks(document)
             total_chunks = len(chunks)
 
