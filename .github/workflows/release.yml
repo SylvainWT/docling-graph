@@ -19,17 +19,17 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
       
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       
       - name: Install uv
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@v4
       
       - name: Build package
         run: uv build
@@ -46,13 +46,37 @@ jobs:
           VERSION="${{ github.ref_name }}"
           VERSION="${VERSION#v}"
           
-          python -m pip install --index-url https://test.pypi.org/simple/ \
-            --extra-index-url https://pypi.org/simple/ \
-            docling-graph==${VERSION}
-          python -c "import docling_graph; print(f'Version: {docling_graph.__version__}')"
+          echo "Waiting for TestPyPI to index version ${VERSION}..."
+          
+          # Retry logic: TestPyPI needs time to index the package
+          MAX_ATTEMPTS=12
+          ATTEMPT=1
+          SLEEP_TIME=10
+          
+          while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
+            echo "Attempt $ATTEMPT of $MAX_ATTEMPTS..."
+            
+            if python -m pip install --index-url https://test.pypi.org/simple/ \
+              --extra-index-url https://pypi.org/simple/ \
+              docling-graph==${VERSION}; then
+              echo "✓ Successfully installed docling-graph==${VERSION}"
+              python -c "import docling_graph; print(f'Version: {docling_graph.__version__}')"
+              exit 0
+            fi
+            
+            if [ $ATTEMPT -lt $MAX_ATTEMPTS ]; then
+              echo "Package not yet available, waiting ${SLEEP_TIME} seconds..."
+              sleep $SLEEP_TIME
+            fi
+            
+            ATTEMPT=$((ATTEMPT + 1))
+          done
+          
+          echo "✗ Failed to install after $MAX_ATTEMPTS attempts"
+          exit 1
       
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v4
         with:
           name: dist
           path: dist/
@@ -67,7 +91,7 @@ jobs:
     
     steps:
       - name: Download build artifacts
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v4
         with:
           name: dist
           path: dist/
@@ -82,12 +106,12 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
       
       - name: Download build artifacts
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v4
         with:
           name: dist
           path: dist/
@@ -134,4 +158,3 @@ jobs:
           echo "- TestPyPI: https://test.pypi.org/project/docling-graph/${{ github.ref_name }}/" >> $GITHUB_STEP_SUMMARY
           echo "- PyPI: https://pypi.org/project/docling-graph/${{ github.ref_name }}/" >> $GITHUB_STEP_SUMMARY
           echo "- GitHub: https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
-
