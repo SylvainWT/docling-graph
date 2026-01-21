@@ -78,9 +78,9 @@ for doc in documents:
     
     try:
         run_pipeline(config)
-        print(f"✓ Processed {doc.name}")
+        print(f"Processed {doc.name}")
     except Exception as e:
-        print(f"✗ Failed {doc.name}: {e}")
+        print(f"Failed {doc.name}: {e}")
 ```
 
 ## See Also
