@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.2.0 (2026-01-21)
+
+### Features
+
+- Configure automated semantic versioning
+  ([`bdace4c`](https://github.com/IBM/docling-graph/commit/bdace4c318b5f8362ce04d9a6bb199c74f846815))
+
+
 ## v0.1.0 (2026-01-21)
 
 ### Bug Fixes
