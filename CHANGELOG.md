@@ -1,6 +1,43 @@
 # CHANGELOG
 
 
+## v0.2.1 (2026-01-21)
+
+### Bug Fixes
+
+- **ci**: Strip 'v' prefix from tag for TestPyPI installation
+  ([`2ddfb42`](https://github.com/IBM/docling-graph/commit/2ddfb420f23678d781d9e869c3afe8374cdccda5))
+
+Signed-off-by: Ayoub EL BOUCHTILI <ayoub.elbouchtili@fr.ibm.com>
+
+### Chores
+
+- **docs**: Update code of conduct
+  ([`ff06127`](https://github.com/IBM/docling-graph/commit/ff0612709687c77c8f9d35b29c8ba243f8dd14a5))
+
+Signed-off-by: Ayoub EL BOUCHTILI <ayoub.elbouchtili@fr.ibm.com>
+
+- **docs**: Update contributing guidelines
+  ([`0d9061d`](https://github.com/IBM/docling-graph/commit/0d9061d8cc3c41bf04a4ae261d3b8d803510e762))
+
+Signed-off-by: Ayoub EL BOUCHTILI <ayoub.elbouchtili@fr.ibm.com>
+
+- **docs**: Update governance
+  ([`797261a`](https://github.com/IBM/docling-graph/commit/797261ad1f254d78eaad35b8b8e8a11bf6739d78))
+
+Signed-off-by: Ayoub EL BOUCHTILI <ayoub.elbouchtili@fr.ibm.com>
+
+- **docs**: Update maintainers
+  ([`ddb40a7`](https://github.com/IBM/docling-graph/commit/ddb40a7003fc680a3df0eb853df1ea0bea942df9))
+
+Signed-off-by: Ayoub EL BOUCHTILI <ayoub.elbouchtili@fr.ibm.com>
+
+- **docs**: Update maintainers
+  ([`02ff051`](https://github.com/IBM/docling-graph/commit/02ff05162e0996ad9a53d0bc944f736102301801))
+
+Signed-off-by: Ayoub EL BOUCHTILI <ayoub.elbouchtili@fr.ibm.com>
+
+
 ## v0.2.0 (2026-01-21)
 
 ### Features
