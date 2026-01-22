@@ -84,7 +84,7 @@ jobs:
           # Semantic-release already created the GitHub release
           # Just upload the distribution files to it (excluding .attestation files)
           # Attestation files are kept on PyPI but filtered from GitHub releases for cleaner presentation
-          find dist/ -type f ! -name '*.attestation' -exec gh release upload '${{ github.ref_name }}' {} --repo '${{ github.repository }}' --clobber +
+          find dist/ -type f ! -name '*.attestation' -exec gh release upload '${{ github.ref_name }}' {} --repo '${{ github.repository }}' --clobber \;
       
       - name: Summary
         run: |
