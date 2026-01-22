@@ -1,6 +1,44 @@
 # CHANGELOG
 
 
+## v0.4.0 (2026-01-22)
+
+### Chores
+
+- **ci**: Correct PyPI deployment in release workflow
+  ([`c985d25`](https://github.com/IBM/docling-graph/commit/c985d25059629fa5b63e36f9b283678158c392b7))
+
+Signed-off-by: Ayoub EL BOUCHTILI <ayoub.elbouchtili@fr.ibm.com>
+
+### Documentation
+
+- **module**: Refactor complete documentation suite for docling-graph
+  ([`7b8cd6c`](https://github.com/IBM/docling-graph/commit/7b8cd6c8bb92e3c10b6bc105d4888ad9a90f6a67))
+
+Signed-off-by: Ayoub EL BOUCHTILI <ayoub.elbouchtili@fr.ibm.com>
+
+### Features
+
+- **cli**: Align CLI with refactored core and improve performance
+  ([`d87f8c8`](https://github.com/IBM/docling-graph/commit/d87f8c835d8314a2a2661e21064e55b5b8513bd0))
+
+Signed-off-by: Ayoub EL BOUCHTILI <ayoub.elbouchtili@fr.ibm.com>
+
+### Refactoring
+
+- **core**: Major LLM client and pipeline simplification
+  ([`20b904c`](https://github.com/IBM/docling-graph/commit/20b904c8695146a5e1803480d720ee674c41816f))
+
+Signed-off-by: Ayoub EL BOUCHTILI <ayoub.elbouchtili@fr.ibm.com>
+
+### Testing
+
+- **core**: Update unit and integration tests for refactored architecture
+  ([`7d61dd7`](https://github.com/IBM/docling-graph/commit/7d61dd734af22243738329f5d146fc71a61408f7))
+
+Signed-off-by: Ayoub EL BOUCHTILI <ayoub.elbouchtili@fr.ibm.com>
+
+
 ## v0.3.0 (2026-01-22)
 
 ### Bug Fixes
