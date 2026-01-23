@@ -268,10 +268,10 @@ The original Markdown formatting is preserved in the extracted content, allowing
 ### Text-Only Pipeline
 
 Markdown files skip:
-- ❌ OCR (no visual processing needed)
-- ❌ Page segmentation (single text stream)
-- ✅ Direct LLM extraction
-- ✅ Semantic chunking (if enabled)
+<br>❌ OCR (no visual processing needed)
+<br>❌ Page segmentation (single text stream)
+<br>✅ Direct LLM extraction
+<br>✅ Semantic chunking (if enabled)
 
 ---
 

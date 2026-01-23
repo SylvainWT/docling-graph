@@ -583,15 +583,15 @@ Congratulations! You've completed the Schema Definition guide. Now:
 
 Before moving to Pipeline Configuration, ensure:
 
-- ✅ Template structure follows best practices
-- ✅ All entities have appropriate `graph_id_fields`
-- ✅ All components have `is_entity=False`
-- ✅ Edge labels are consistent and descriptive
-- ✅ Field descriptions are LLM-friendly
-- ✅ Examples are realistic and diverse
-- ✅ Validators ensure data quality
-- ✅ Tests pass successfully
-- ✅ Template tested with sample documents
+<br>✅ Template structure follows best practices
+<br>✅ All entities have appropriate `graph_id_fields`
+<br>✅ All components have `is_entity=False`
+<br>✅ Edge labels are consistent and descriptive
+<br>✅ Field descriptions are LLM-friendly
+<br>✅ Examples are realistic and diverse
+<br>✅ Validators ensure data quality
+<br>✅ Tests pass successfully
+<br>✅ Template tested with sample documents
 
 ---
 

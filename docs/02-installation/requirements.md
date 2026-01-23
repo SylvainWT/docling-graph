@@ -312,9 +312,9 @@ Graph Construction:     ~100 MB per 1000 nodes
 | LLM (Remote APIs) | ✅ | ✅ | ✅ | No |
 
 Legend:
-- ✅ Fully supported
-- ⚠️ Supported with limitations
-- ❌ Not supported
+<br>✅ Fully supported
+<br>⚠️ Supported with limitations
+<br>❌ Not supported
 
 ### Provider Compatibility
 

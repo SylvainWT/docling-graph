@@ -200,11 +200,11 @@ jobs:
 
 Required checks before merge:
 
-- ✅ Tests pass
-- ✅ Code coverage ≥ 80%
-- ✅ Linting passes
-- ✅ Type checking passes
-- ✅ Documentation builds
+<br>✅ Tests pass
+<br>✅ Code coverage ≥ 80%
+<br>✅ Linting passes
+<br>✅ Type checking passes
+<br>✅ Documentation builds
 
 ---
 
@@ -287,10 +287,10 @@ feat: add custom backend support (#123)
 
 Before merging:
 
-- ✅ All checks pass
-- ✅ At least one approval
-- ✅ No unresolved conversations
-- ✅ Branch is up to date
+<br>✅ All checks pass
+<br>✅ At least one approval
+<br>✅ No unresolved conversations
+<br>✅ Branch is up to date
 
 ---
 

@@ -366,14 +366,14 @@ class Document(BaseModel):
 ```
 
 **This template includes:**
-- ✅ Module docstring
-- ✅ Required imports
-- ✅ `edge()` helper function
-- ✅ Component with `is_entity=False`
-- ✅ Entity with `graph_id_fields`
-- ✅ Root document model
-- ✅ Clear field descriptions and examples
-- ✅ Graph relationships via `edge()`
+<br>✅ Module docstring
+<br>✅ Required imports
+<br>✅ `edge()` helper function
+<br>✅ Component with `is_entity=False`
+<br>✅ Entity with `graph_id_fields`
+<br>✅ Root document model
+<br>✅ Clear field descriptions and examples
+<br>✅ Graph relationships via `edge()`
 
 ---
 

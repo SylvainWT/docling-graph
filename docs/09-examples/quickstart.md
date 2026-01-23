@@ -441,10 +441,10 @@ cat outputs/nodes.csv
 ## Summary
 
 You've learned:
-- ✅ How to create a simple Pydantic template
-- ✅ How to run extraction (CLI and Python)
-- ✅ How to view and inspect results
-- ✅ Basic troubleshooting
+<br>✅ How to create a simple Pydantic template
+<br>✅ How to run extraction (CLI and Python)
+<br>✅ How to view and inspect results
+<br>✅ Basic troubleshooting
 
 **Time taken:** ~5 minutes
 

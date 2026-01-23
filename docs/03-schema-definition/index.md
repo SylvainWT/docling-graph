@@ -95,11 +95,11 @@ class Invoice(BaseModel):
 ```
 
 **Key Concepts Shown:**
-- ✅ `edge()` helper function for relationships
-- ✅ Component with `is_entity=False` (Address)
-- ✅ Entity with `graph_id_fields` (Organization, Invoice)
-- ✅ Clear field descriptions and examples
-- ✅ Graph relationships via `edge()` calls
+<br>✅ `edge()` helper function for relationships
+<br>✅ Component with `is_entity=False` (Address)
+<br>✅ Entity with `graph_id_fields` (Organization, Invoice)
+<br>✅ Clear field descriptions and examples
+<br>✅ Graph relationships via `edge()` calls
 
 ---
 
@@ -195,10 +195,10 @@ Docling Graph includes production-ready templates for various domains:
 
 Before creating templates, ensure you have:
 
-- ✅ **Python 3.10+** installed
-- ✅ **Docling Graph** installed (`uv sync --extra all`)
-- ✅ **Basic Pydantic knowledge** (recommended but not required)
-- ✅ **Understanding of your domain** (document types, entities, relationships)
+<br>✅ **Python 3.10+** installed
+<br>✅ **Docling Graph** installed (`uv sync --extra all`)
+<br>✅ **Basic Pydantic knowledge** (recommended but not required)
+<br>✅ **Understanding of your domain** (document types, entities, relationships)
 
 ---
 

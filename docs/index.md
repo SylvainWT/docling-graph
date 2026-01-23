@@ -10,7 +10,7 @@ Welcome to the **Docling Graph** documentation! This guide will help you transfo
 
 ## What is Docling Graph?
 
-Docling-Graph turns documents into validated *Pydantic** objects, then builds a **directed knowledge graph** with explicit semantic relationships.
+Docling-Graph turns documents into validated **Pydantic** objects, then builds a **directed knowledge graph** with explicit semantic relationships.
 
 This transformation enables high-precision use cases in **chemistry, finance, and legal** domains, where AI must capture exact entity connections (compounds and reactions, instruments and dependencies, properties and measurements) **rather than rely on approximate text embeddings**.
 

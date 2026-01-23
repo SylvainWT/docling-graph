@@ -34,10 +34,10 @@ uv sync
 ```
 
 This installs:
-- ✅ Docling (document conversion)
-- ✅ VLM backend (NuExtract models)
-- ✅ Core graph functionality
-- ❌ LLM providers (not included)
+<br>✅ Docling (document conversion)
+<br>✅ VLM backend (NuExtract models)
+<br>✅ Core graph functionality
+<br>❌ LLM providers (not included)
 
 ### Full Installation
 
@@ -53,13 +53,13 @@ uv sync --extra all
 ```
 
 This installs:
-- ✅ Everything from minimal
-- ✅ vLLM (local LLM inference)
-- ✅ Ollama client
-- ✅ Mistral AI client
-- ✅ OpenAI client
-- ✅ Google Gemini client
-- ✅ IBM WatsonX client
+<br>✅ Everything from minimal
+<br>✅ vLLM (local LLM inference)
+<br>✅ Ollama client
+<br>✅ Mistral AI client
+<br>✅ OpenAI client
+<br>✅ Google Gemini client
+<br>✅ IBM WatsonX client
 
 ## Installation Options
 

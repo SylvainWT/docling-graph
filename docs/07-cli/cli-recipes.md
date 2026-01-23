@@ -47,10 +47,10 @@ uv run docling-graph convert "docs/examples/data/invoice/sample_invoice.jpg" \
 ```
 
 **When to Use:**
-- ✅ Single-page forms
-- ✅ ID cards or badges
-- ✅ Structured layouts
-- ✅ Image files (JPG, PNG)
+<br>✅ Single-page forms
+<br>✅ ID cards or badges
+<br>✅ Structured layouts
+<br>✅ Image files (JPG, PNG)
 
 **Python Equivalent:** `examples/scripts/01_vlm_from_image.py`
 
@@ -76,9 +76,9 @@ uv run docling-graph convert "docs/examples/data/invoice/sample_invoice.pdf" \
 ```
 
 **When to Use:**
-- ✅ Single-page PDFs
-- ✅ Forms in PDF format
-- ✅ High-quality scans
+<br>✅ Single-page PDFs
+<br>✅ Forms in PDF format
+<br>✅ High-quality scans
 
 **Python Equivalent:** `examples/scripts/02_vlm_from_pdf_page.py`
 
@@ -109,10 +109,10 @@ uv run docling-graph convert "docs/examples/data/research_paper/rheology.pdf" \
 ```
 
 **When to Use:**
-- ✅ Multi-page documents
-- ✅ Text-heavy content
-- ✅ No local GPU
-- ✅ Cloud-based processing
+<br>✅ Multi-page documents
+<br>✅ Text-heavy content
+<br>✅ No local GPU
+<br>✅ Cloud-based processing
 
 **Cost:** ~$0.01-0.10 per document (varies by model and length)
 
@@ -150,10 +150,10 @@ uv run docling-graph convert "docs/examples/data/research_paper/rheology.pdf" \
 ```
 
 **When to Use:**
-- ✅ Privacy-sensitive documents
-- ✅ Offline processing
-- ✅ No API costs
-- ✅ Local development
+<br>✅ Privacy-sensitive documents
+<br>✅ Offline processing
+<br>✅ No API costs
+<br>✅ Local development
 
 **Python Equivalent:** `examples/scripts/04_llm_local_ollama.py`
 
@@ -183,15 +183,15 @@ uv run docling-graph convert "docs/examples/data/research_paper/rheology.pdf" \
 ```
 
 **When to Use:**
-- ✅ Complex documents
-- ✅ Accuracy > speed
-- ✅ Conflicting information across pages
-- ✅ Quality matters more than cost
+<br>✅ Complex documents
+<br>✅ Accuracy > speed
+<br>✅ Conflicting information across pages
+<br>✅ Quality matters more than cost
 
 **Trade-offs:**
-- ⚠️ Slower processing
-- ⚠️ Higher API costs
-- ✅ Better accuracy
+<br>⚠️ Slower processing
+<br>⚠️ Higher API costs
+<br>✅ Better accuracy
 
 **Python Equivalent:** `examples/scripts/05_llm_with_consolidation.py`
 
@@ -220,10 +220,10 @@ uv run docling-graph convert "docs/examples/data/research_paper/rheology.pdf" \
 ```
 
 **When to Use:**
-- ✅ Independent pages
-- ✅ Page-level analysis
-- ✅ Faster processing
-- ✅ Parallel processing possible
+<br>✅ Independent pages
+<br>✅ Page-level analysis
+<br>✅ Faster processing
+<br>✅ Parallel processing possible
 
 **Output:** Multiple graphs (one per page)
 
@@ -254,10 +254,10 @@ uv run docling-graph convert "docs/examples/data/invoice/sample_invoice.pdf" \
 ```
 
 **When to Use:**
-- ✅ Small documents (<5 pages)
-- ✅ Documents within context limit
-- ✅ Faster processing
-- ✅ Simpler pipeline
+<br>✅ Small documents (<5 pages)
+<br>✅ Documents within context limit
+<br>✅ Faster processing
+<br>✅ Simpler pipeline
 
 **Python Equivalent:** `examples/scripts/07_llm_no_chunking.py`
 
@@ -291,10 +291,10 @@ uv run docling-graph convert "docs/examples/data/research_paper/rheology.pdf" \
 ```
 
 **When to Use:**
-- ✅ Complex layouts
-- ✅ Tables and figures
-- ✅ Mixed content types
-- ✅ Better layout preservation
+<br>✅ Complex layouts
+<br>✅ Tables and figures
+<br>✅ Mixed content types
+<br>✅ Better layout preservation
 
 **Python Equivalent:** `examples/scripts/08_llm_with_vision_config.py`
 
@@ -326,9 +326,9 @@ cat outputs/recipe_09/graph.cypher | cypher-shell -u neo4j -p password
 ```
 
 **When to Use:**
-- ✅ Direct Neo4j import
-- ✅ Graph database workflows
-- ✅ Production deployments
+<br>✅ Direct Neo4j import
+<br>✅ Graph database workflows
+<br>✅ Production deployments
 
 **Python Equivalent:** `examples/scripts/09_export_to_cypher.py`
 

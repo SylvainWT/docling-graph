@@ -141,10 +141,10 @@ date_of_birth: Optional[date] = Field(
 ```
 
 **What makes this excellent:**
-- ✅ Clear purpose ("person's date of birth")
-- ✅ Extraction hints (field name variations)
-- ✅ Parsing instructions (format normalization)
-- ✅ Multiple realistic examples
+<br>✅ Clear purpose ("person's date of birth")
+<br>✅ Extraction hints (field name variations)
+<br>✅ Parsing instructions (format normalization)
+<br>✅ Multiple realistic examples
 
 ### Poor Description Examples
 

@@ -316,10 +316,10 @@ Invoice (root node)
 ### Validation
 
 The pipeline validates:
-- ✅ `schema_name` must be "DoclingDocument"
-- ✅ `version` field must be present
-- ✅ Valid JSON structure
-- ✅ Required fields present
+<br>✅ `schema_name` must be "DoclingDocument"
+<br>✅ `version` field must be present
+<br>✅ Valid JSON structure
+<br>✅ Required fields present
 
 ---
 
